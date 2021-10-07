@@ -9,4 +9,4 @@ for i in range(len(cogs)):
   cogs[i].setup(client)
 
 
-client.run('TOCKEN')
+client.run('ODk1NDI5NzIyNzA2Njc3ODAx.YV4b6g.Tilxdc4zK-0aeCwid5amwGuXTaA')
