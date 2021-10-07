@@ -34,11 +34,11 @@ class music(commands.Cog):
       vc.play(source)
 
   @commands.command()
-  async def pause(self,ctx,url):
+  async def pause(self,ctx):
     await ctx.voice_client.pause()
 
   @commands.command()
-  async def resume(self,ctx,url):
+  async def resume(self,ctx):
     await ctx.voice_client.resume()
 
 def setup(client):
