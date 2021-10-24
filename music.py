@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 import yt_dlp
 
+from search_yt import search
+
 class music(commands.Cog):
   def __init__(self, client):
     self.client = client
@@ -22,6 +24,10 @@ class music(commands.Cog):
 
   @commands.command()
   async def play(self,ctx,url):
+
+    # Convert query text into url
+    url = search(url)
+    
     if ctx.voice_client is None:
       await ctx.author.voice.channel.connect()
 

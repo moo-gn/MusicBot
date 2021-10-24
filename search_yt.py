@@ -1,6 +1,6 @@
 import requests
 
-API_KEY = 'api_key here'
+API_KEY = 'AIzaSyAJiipfRCjIQlLib6yEL5KK8dLmQ8YaCdo'
 
 # Input string query, TODO: optional= number of results to bring back
 def search(query, MAX_RESULTS=1):
@@ -11,9 +11,9 @@ def search(query, MAX_RESULTS=1):
     return video_link
 
 if __name__ == "__main__":
-    pass
+    # pass
     # Test
-    # while True:
-    #     query = input("Type video name: ")
-    #     print(search(query))
+    while True:
+        query = input("Type video name: ")
+        print(search(query))
     
