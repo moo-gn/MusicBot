@@ -1,6 +1,6 @@
 import discord
 
-color_in = 0xADD8E6
+color_in = 0x8dffd3
 
 def queue_list(x):
   listembed = discord.Embed(title = 'Song Queue:', color=color_in)
