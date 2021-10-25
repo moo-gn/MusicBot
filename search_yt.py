@@ -1,6 +1,6 @@
 import requests
 
-API_KEY = 'AIzaSyAxtKgVpHIyY39pTGPcimyh10Dkf2ZD7k4'
+API_KEY = 'AIzaSyCrFFN6cuJVShMzEg0sZBxGkBS1nZdhces'
 
 # Input string query, TODO: optional= number of results to bring back
 def search(query, MAX_RESULTS=1):
