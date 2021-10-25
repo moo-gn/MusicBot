@@ -6,7 +6,6 @@ API_KEY = 'AIzaSyAxtKgVpHIyY39pTGPcimyh10Dkf2ZD7k4'
 def search(query, MAX_RESULTS=1):
     URL = f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults={MAX_RESULTS}&q={query}&key={API_KEY}"
     response = requests.get(URL).json()
-    print(response)
     video_id = response['items'][0]['id']['videoId']
     video_title = response['items'][0]['snippet']['title']
     video_link = f"https://youtube.com/watch?v={video_id}"

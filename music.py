@@ -1,8 +1,6 @@
 import discord
 from discord.ext import commands
 import yt_dlp
-import asyncio
-import time
 
 
 from search_yt import search
@@ -23,18 +21,7 @@ class music(commands.Cog):
 
   @commands.command()
   async def leave(self,ctx):
-    await ctx.voice_client.disconnect()
-
-  #FIX KEEPON
-  async def keepon(self, ctx):
-    while True:
-      vc = ctx.voice_client
-      if not vc.is_playing():
-        if self.queue:
-          source = self.queue.pop(0)
-          vc.play(source[0]) 
-        else:
-          break   
+    await ctx.voice_client.disconnect()  
 
   @commands.command()
   async def play(self,ctx,*,message):
@@ -48,13 +35,13 @@ class music(commands.Cog):
     FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
     YDL_OPTIONS = {'format':'bestaudio'}
 
+    ctx.voice_client.stop()
     with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
       info = ydl.extract_info(fetch[0], download=False)
       url2 = info['formats'][0]['url']
       source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
-      # Add source of audio + the video title
-      self.queue.append([source, fetch[1]])
-      await self.keepon(ctx)
+
+      ctx.voice_client.play(source)
 
   @commands.command()
   async def pause(self,ctx):
