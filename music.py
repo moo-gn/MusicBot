@@ -32,7 +32,7 @@ class music(commands.Cog):
       ctx.voice_client.play(fetch[0], after= lambda x : self.play_next(ctx)) 
       
 
-  @commands.command(aliases=['add'])
+  @commands.command(aliases=['add', 'p'])
   async def play(self,ctx,*,message):
     await asyncio.sleep(1)
     fetch = search(message)
@@ -60,25 +60,22 @@ class music(commands.Cog):
 
   @commands.command(aliases=['stop', 'hold'])
   async def pause(self,ctx):
-    if ctx.voice_client.is_playing() and self.play_status:
-        await ctx.voice_client.pause()
+        await ctx.send(embed=qb.send_msg('Paused music!'))
         self.play_status = False
-        await ctx.send(embed=qb.send_msg('Paused music'))
-    else:
-      await ctx.send(embed=qb.send_msg('No music is playing'))
+        await ctx.voice_client.pause()
 
-  @commands.command()
+  @commands.command(aliases=['queue', 'q', 'l'])
   async def list(self,ctx):
-    await ctx.send(embed=qb.queue_list(self.queue)) 
+    if len(self.queue):
+      await ctx.send(embed=qb.queue_list(self.queue)) 
+    else:
+      await ctx.send(embed=qb.send_msg('There is no current queue'))  
 
   @commands.command(aliases=['continue'])
   async def resume(self,ctx):
-    if not ctx.voice_client.is_playing() and not self.play_status:
-      await ctx.voice_client.resume() 
-      self.play_status = True 
-      await ctx.send(embed=qb.send_msg('Resume playing'))
-    else:
-      await ctx.send(embed=qb.send_msg('Music is already playing!'))
+    await ctx.send(embed=qb.send_msg('Resume playing'))
+    self.play_status = True 
+    await ctx.voice_client.resume() 
 
   @commands.command()
   async def remove(self,ctx,*,message):
@@ -101,7 +98,6 @@ class music(commands.Cog):
       self.play_next(ctx)
     else:
       await ctx.send(embed=qb.send_msg('Nothing is playing to skip!')) 
-     
 
 def setup(client):
   client.add_cog(music(client))    
