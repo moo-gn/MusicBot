@@ -9,6 +9,7 @@ class music(commands.Cog):
   def __init__(self, client):
     self.client = client
     self.queue = []
+
   @commands.command()
   async def join(self,ctx):
     if ctx.author.voice is None:
@@ -23,6 +24,11 @@ class music(commands.Cog):
   async def leave(self,ctx):
     await ctx.voice_client.disconnect()  
 
+  def play_next(self, ctx):
+    if len(self.queue) > 0:
+      source = self.queue.pop(0)  
+      ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+
   @commands.command()
   async def play(self,ctx,*,message):
 
@@ -35,13 +41,15 @@ class music(commands.Cog):
     FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
     YDL_OPTIONS = {'format':'bestaudio'}
 
-    ctx.voice_client.stop()
     with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
       info = ydl.extract_info(fetch[0], download=False)
       url2 = info['formats'][0]['url']
       source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
 
-      ctx.voice_client.play(source)
+      if ctx.voice_client.is_playing():
+        self.queue.append(source)
+      else:  
+        ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
 
   @commands.command()
   async def pause(self,ctx):
@@ -53,7 +61,14 @@ class music(commands.Cog):
 
   @commands.command()
   async def resume(self,ctx):
-    await ctx.voice_client.resume()     
+    await ctx.voice_client.resume()  
+
+  @commands.command()
+  async def remove(self,ctx,*,message):
+    try:
+      self.queue.pop(int(message)-1)
+    except IndexError: 
+      await ctx.send("Index error")
 
 def setup(client):
   client.add_cog(music(client))    
