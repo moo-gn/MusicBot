@@ -2,9 +2,8 @@ import discord
 from discord.ext import commands
 import yt_dlp
 from queueembed import queue_list
-
-
 from search_yt import search
+import asyncio
 
 class music(commands.Cog):
   def __init__(self, client):
@@ -27,8 +26,7 @@ class music(commands.Cog):
 
   def play_next(self, ctx):
     if len(self.queue) > 0:
-      source = self.queue.pop(0)  
-      fetch = search(source)
+      fetch = self.queue.pop(0)  
 
       FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
       YDL_OPTIONS = {'format':'bestaudio'}
@@ -37,19 +35,19 @@ class music(commands.Cog):
         info = ydl.extract_info(fetch[0], download=False)
         url2 = info['formats'][0]['url']
         source = discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
-        ctx.voice_client.play(source[0], after= lambda x : self.play_next(ctx))
+        ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
 
   @commands.command()
   async def play(self,ctx,*,message):
+    await asyncio.sleep(1)
+    fetch = search(message)
+
     if ctx.voice_client is None:
       await ctx.author.voice.channel.connect()
 
     if ctx.voice_client.is_playing():
-        self.queue.append(message)
+        self.queue.append([fetch[0], fetch[1]])
     else:  
-      # Convert query text into url
-      fetch = search(message)
-
       FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
       YDL_OPTIONS = {'format':'bestaudio'}
 
@@ -58,6 +56,7 @@ class music(commands.Cog):
         url2 = info['formats'][0]['url']
         source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+
 
 
   @commands.command()
