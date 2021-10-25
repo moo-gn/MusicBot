@@ -3,10 +3,10 @@ from discord.ext import commands
 import music
 
 cogs = [music]
-client = commands.Bot(command_prefix='>', intents = discord.Intents.all())
+client = commands.Bot(command_prefix='$', intents = discord.Intents.all())
 
 for i in range(len(cogs)):
   cogs[i].setup(client)
 
 
-client.run('ODk1NDI5NzIyNzA2Njc3ODAx.YV4b6g.Tilxdc4zK-0aeCwid5amwGuXTaA')
+client.run('ODk1NDI5NzIyNzA2Njc3ODAx.YV4b6g.n9D8aUDey_9eiMhMrMWQIbk0_Ik')
