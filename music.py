@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import yt_dlp
-import queueembed as qb
+import embeds as qb
 from search_yt import search
 import asyncio
 
@@ -11,6 +11,9 @@ class music(commands.Cog):
     self.queue = []
     self.play_status = False
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+    self.cmnds1 = ['join, j : joins the voice channel', 'leave : leaves the voice channel', 'play, p , add : plays song or appends it to queue', 'pause, stop, hold : pauses the song', 'resume, continue : resume playing','list, queue, l, q : displays the songs on the queue' , 'skip : skips song', 'clear, clr : clears the queue', 'remove, r : removes a song from queue based on its index']
+    self.cmnds2 = [['join, j', 'joins the voice channel'], ['leave', 'leaves the voice channel'], ['play, p , add', 'plays song or appends it to queue'], ['pause, stop, hold', 'pauses the song'], ['resume, continue', 'resume playing'], ['list, queue, l, q', 'displays the songs on the queue'] , ['skip', 'skips song'], ['clear, clr', 'clears the queue'], ['remove, r', 'removes a song from queue based on its index']]
+
 
   @commands.command(aliases=['j'])
   async def join(self,ctx):
@@ -34,7 +37,7 @@ class music(commands.Cog):
 
   @commands.command(aliases=['add', 'p'])
   async def play(self,ctx,*,message):
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.01)
     fetch = search(message)
     print(fetch[1])
 
@@ -83,7 +86,7 @@ class music(commands.Cog):
     else:
       await ctx.send(embed=qb.send_msg('There is no current queue'))  
 
-  @commands.command()
+  @commands.command(aliases=['r'])
   async def remove(self,ctx,*,message):
     try:
       fetch = self.queue.pop(int(message)-1)
@@ -105,5 +108,9 @@ class music(commands.Cog):
     except (TypeError,AttributeError):
       return 
 
+  @commands.command()
+  async def help(self, ctx):
+    await ctx.send(embed=qb.help_list(self.cmnds2))  
+
 def setup(client):
-  client.add_cog(music(client))    
+  client.add_cog(music(client))   
