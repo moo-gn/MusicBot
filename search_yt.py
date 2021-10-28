@@ -1,4 +1,5 @@
 import requests
+import html
 
 def search(query):
     url = f"https://www.youtube.com/results?search_query={query}"
@@ -22,8 +23,8 @@ def search(query):
                   break  
 
               title = " ".join(title)
-              title = title.strip('content="')
-              title = title.strip('"><meta') 
+              title = title[9:-7]
+              title = html.unescape(title)
               return[link, title]
 
     r = requests.get(url)

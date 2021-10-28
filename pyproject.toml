@@ -10,6 +10,7 @@ discord = "^1.7.3"
 youtube_dl = "^2021.6.6"
 PyNaCl = "^1.4.0"
 yt-dlp = "^2021.10.22"
+bs4 = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
 

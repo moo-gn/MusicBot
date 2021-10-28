@@ -11,8 +11,7 @@ class music(commands.Cog):
     self.queue = []
     self.play_status = False
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-    self.cmnds1 = ['join, j : joins the voice channel', 'leave : leaves the voice channel', 'play, p , add : plays song or appends it to queue', 'pause, stop, hold : pauses the song', 'resume, continue : resume playing','list, queue, l, q : displays the songs on the queue' , 'skip : skips song', 'clear, clr : clears the queue', 'remove, r : removes a song from queue based on its index']
-    self.cmnds2 = [['join, j', 'joins the voice channel'], ['leave', 'leaves the voice channel'], ['play, p , add', 'plays song or appends it to queue'], ['pause, stop, hold', 'pauses the song'], ['resume, continue', 'resume playing'], ['list, queue, l, q', 'displays the songs on the queue'] , ['skip', 'skips song'], ['clear, clr', 'clears the queue'], ['remove, r', 'removes a song from queue based on its index']]
+    self.cmnds = ['join, j : joins the voice channel', 'leave : leaves the voice channel', 'play, p , add : plays song or appends it to queue', 'pause, stop, hold : pauses the song', 'resume, continue : resume playing','list, queue, l, q : displays the songs on the queue' , 'skip : skips song', 'clear, clr : clears the queue', 'remove, r : removes a song from queue based on its index']
 
 
   @commands.command(aliases=['j'])
@@ -110,7 +109,7 @@ class music(commands.Cog):
 
   @commands.command()
   async def help(self, ctx):
-    await ctx.send(embed=qb.help_list(self.cmnds2))  
+    await ctx.send(embed=qb.help_list(self.cmnds))  
 
 def setup(client):
   client.add_cog(music(client))   
