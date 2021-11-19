@@ -18,7 +18,7 @@ class TitleParser(HTMLParser):
 
   def handle_data(self, data):
     if self.recording:
-      self.title = data
+     self.title = data[:-10]
 
 class LinkParser(HTMLParser):
   def __init__(self):

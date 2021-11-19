@@ -98,7 +98,7 @@ class music(commands.Cog):
     self.queue.clear()
     await ctx.send(embed=qb.send_msg('Cleared the queue!'))
 
-  @commands.command()
+  @commands.command(aliases=['s'])
   async def skip(self, ctx):
     try:
       await ctx.send(embed=qb.send_msg('Skipped!'))
