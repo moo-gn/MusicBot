@@ -1,3 +1,4 @@
+from ntpath import join
 import discord
 from discord.ext import commands
 import yt_dlp
@@ -11,7 +12,7 @@ class music(commands.Cog):
     self.queue = []
     self.play_status = False
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-    self.cmnds = ['join, j : joins the voice channel', 'leave : leaves the voice channel', 'play, p , add : plays song or appends it to queue', 'pause, stop, hold : pauses the song', 'resume, continue : resume playing','list, queue, l, q : displays the songs on the queue' , 'skip : skips song', 'clear, clr : clears the queue', 'remove, r : removes a song from queue based on its index']
+    self.cmnds = ['join, j : joins the voice channel', 'leave : leaves the voice channel', 'play, p , add : plays song or appends it to queue', 'pause, stop, hold : pauses the song', 'resume, continue : resume playing','list, queue, l, q : displays the first 25 songs on the queue' , 'skip : skips song', 'clear, clr : clears the queue', 'remove, r : removes a song from queue based on its index']
 
 
   @commands.command(aliases=['j'])
@@ -31,32 +32,49 @@ class music(commands.Cog):
   def play_next(self, ctx):
     if len(self.queue) > 0:
       fetch = self.queue.pop(0) 
-      ctx.voice_client.play(fetch[0], after= lambda x : self.play_next(ctx)) 
+      ctx.voice_client.play(fetch[0], after= lambda x : self.play_next(ctx))
+      
       
 
   @commands.command(aliases=['add', 'p'])
   async def play(self,ctx,*,message):
+    YDL_OPTIONS = {'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}
     await asyncio.sleep(0.01)
-    fetch = search(message)
-    print(fetch[1])
 
     if ctx.voice_client is None:
-      await ctx.author.voice.channel.connect()
- 
-    YDL_OPTIONS = {'format':'bestaudio'}
+        await ctx.author.voice.channel.connect()
 
-    with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-      info = ydl.extract_info(fetch[0], download=False)
-      url2 = info['formats'][0]['url']
-      source = await discord.FFmpegOpusAudio.from_probe(url2, **self.FFMPEG_OPTIONS)
-
-      if ctx.voice_client.is_playing():
-        self.queue.append([source, fetch[1]])
-        await ctx.send(embed=qb.add_song_playing(fetch[1]))
-      else:  
-        ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
-        self.play_status = True 
+    #if youtube playlist add each vid to the queue and play the first if its not playing
+    if message.startswith('https://www.youtube.com/playlist?list='):
+      msg = await ctx.send(embed=qb.send_msg('adding playlist ...'))
+      with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+        info = ydl.extract_info(message, download=False)
+      for entry in info['entries']:
+        source = await discord.FFmpegOpusAudio.from_probe(entry['url'], **self.FFMPEG_OPTIONS)
+        self.queue.append([source, entry['title']])
+        
+      if not ctx.voice_client.is_playing():
+        fetch = self.queue.pop(0)
+        ctx.voice_client.play(fetch[0], after= lambda x : self.play_next(ctx))
         await ctx.send(embed=qb.first_song_playing(fetch[1]))
+      await msg.edit(embed=qb.queue_list(self.queue))
+
+    else:
+      fetch = search(message)
+      print(fetch[1])
+
+      with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+        info = ydl.extract_info(fetch[0], download=False)
+        url2 = info['formats'][0]['url']
+        source = await discord.FFmpegOpusAudio.from_probe(url2, **self.FFMPEG_OPTIONS)
+
+        if ctx.voice_client.is_playing():
+          self.queue.append([source, fetch[1]])
+          await ctx.send(embed=qb.add_song_playing(fetch[1]))
+        else:  
+          ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+          self.play_status = True 
+          await ctx.send(embed=qb.first_song_playing(fetch[1]))
 
 
 
