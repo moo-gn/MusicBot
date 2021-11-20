@@ -1,10 +1,12 @@
 import discord
 from discord.ext import commands
+from discord.ui import view
 import yt_dlp
 import embeds as qb
 from search_yt import search
 import asyncio
 import random
+from qbuttons import Qbuttons
 
 class music(commands.Cog):
   def __init__(self, client):
@@ -86,7 +88,7 @@ class music(commands.Cog):
         source = discord.FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS)
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
         await ctx.send(embed=qb.first_song_playing(fetch[0]))
-      await msg.edit(embed=qb.queue_list(self.queue))
+      await msg.edit(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue))
 
     else:
       fetch = search(message)
@@ -127,7 +129,7 @@ class music(commands.Cog):
   @commands.command(aliases=['queue', 'q', 'l'])
   async def list(self,ctx):
     if len(self.queue):
-      await ctx.send(embed=qb.queue_list(self.queue)) 
+      await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue). ) 
     else:
       await ctx.send(embed=qb.send_msg('There is no current queue'))  
 

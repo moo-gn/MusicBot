@@ -2,10 +2,11 @@ import discord
 
 color_in = 0x8dffd3
 
-def queue_list(x):
+def queue_list(x, page = 1):
   listembed = discord.Embed(title = 'Song Queue:', color=color_in)
   listembed.set_thumbnail(url = 'https://cdn.discordapp.com/attachments/901624454688440430/901664414963499079/musicStops.png')
-  for i in range(len(x)):
+  listembed.set_footer(text = '{0}/{1}'.format(page, -(-len(x)//25)) )
+  for i in range((page -1)*25,len(x)):
     listembed.add_field(name=f'{i + 1}.{x[i][0]}', value = '\u200b', inline=False)
   return listembed 
 
