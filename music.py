@@ -43,8 +43,12 @@ class music(commands.Cog):
     if ctx.voice_client is None:
         await ctx.author.voice.channel.connect()
 
+
+    if len(self.queue) > 100:
+        await ctx.send(embed=qb.send_msg('Queue limit reached!'))
+
     #if youtube playlist add each vid to the queue and play the first if its not playing
-    if message.startswith('https://www.youtube.com/playlist?list='):
+    elif message.startswith('https://www.youtube.com/playlist?list='):
       msg = await ctx.send(embed=qb.send_msg('adding playlist ...'))
       with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
         info = ydl.extract_info(message, download=False)
