@@ -4,12 +4,17 @@ import yt_dlp
 import embeds as qb
 from search_yt import search
 import asyncio
+import random
 
 class music(commands.Cog):
   def __init__(self, client):
     self.client = client
     self.queue = []
+    self.increment = -1
+    self.loop = False
     self.play_status = False
+    self.play_skip = False
+    self.play_skip_int = 0
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
     self.cmnds = ['join, j : joins the voice channel', 'leave : leaves the voice channel', 'play, p , add : plays song or appends it to queue', 'pause, stop, hold : pauses the song', 'resume, continue : resume playing','list, queue, l, q : displays the first 25 songs on the queue' , 'skip : skips song', 'clear, clr : clears the queue', 'remove, r : removes a song from queue based on its index']
 
@@ -28,9 +33,30 @@ class music(commands.Cog):
   async def leave(self,ctx):
     await ctx.voice_client.disconnect()  
 
+  def if_end(self, x):
+    if x == len(self.queue):
+      x = 0
+    return x    
+
   def play_next(self, ctx):
     if len(self.queue) > 0:
-      fetch = self.queue.pop(0) 
+      self.increment += 1
+      self.increment = self.if_end(self.increment)
+      next = 0
+
+      print(self.play_next)
+      if self.play_skip:
+        next = self.play_skip_int
+        print(next)
+        self.increment = next
+        self.play_skip = False
+
+      if self.loop:
+        fetch = self.queue[self.increment]
+      else:  
+        print(next)
+        fetch = self.queue.pop(next)
+
       source = discord.FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS)
       ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
       
@@ -105,7 +131,7 @@ class music(commands.Cog):
     else:
       await ctx.send(embed=qb.send_msg('There is no current queue'))  
 
-  @commands.command(aliases=['r'])
+  @commands.command(aliases=['r', 'rm'])
   async def remove(self,ctx,*,message):
     try:
       fetch = self.queue.pop(int(message)-1)
@@ -130,6 +156,34 @@ class music(commands.Cog):
   @commands.command()
   async def help(self, ctx):
     await ctx.send(embed=qb.help_list(self.cmnds))  
+
+  @commands.command()
+  async def loop(self, ctx):
+    if self.loop:
+      self.loop = False
+      await ctx.send(embed=qb.send_msg('Loop turned off!'))
+    else:
+      self.loop = True
+      await ctx.send(embed=qb.send_msg('Loop turned on!')) 
+
+  @commands.command()
+  async def shuffle(self, ctx):
+    await ctx.send(embed=qb.send_msg('Shuffled the queue!'))  
+    random.shuffle(self.queue)  
+
+  @commands.command(aliases=['ps'])
+  async def playskip(self, ctx,*,message):
+    if int(message)-1 > len(self.queue) - 1 or int(message)-1 < 1:
+      await ctx.send(embed=qb.send_msg('Skip number not admissible'))
+      return
+    try:
+      await ctx.send(embed=qb.send_msg(f"Skipped to {int(message)} !"))
+      self.play_skip = True
+      self.play_skip_int = int(message)-1
+      await ctx.voice_client.stop()
+      self.play_next(ctx)
+    except (TypeError,AttributeError):
+      return    
 
 def setup(client):
   client.add_cog(music(client))   
