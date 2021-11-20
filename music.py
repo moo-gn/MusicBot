@@ -161,10 +161,10 @@ class music(commands.Cog):
   async def loop(self, ctx):
     if self.loop:
       self.loop = False
-      await ctx.send(embed=qb.send_msg('Loop turned off!'))
+      await ctx.send(embed=qb.send_msg('Queue loop turned off!'))
     else:
       self.loop = True
-      await ctx.send(embed=qb.send_msg('Loop turned on!')) 
+      await ctx.send(embed=qb.send_msg('Queue loop turned on!')) 
 
   @commands.command()
   async def shuffle(self, ctx):
