@@ -46,17 +46,14 @@ class music(commands.Cog):
       self.increment = self.if_end(self.increment)
       next = 0
 
-      print(self.play_next)
       if self.play_skip:
         next = self.play_skip_int
-        print(next)
         self.increment = next
         self.play_skip = False
 
       if self.loop:
         fetch = self.queue[self.increment]
       else:  
-        print(next)
         fetch = self.queue.pop(next)
 
       source = discord.FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS)
@@ -88,7 +85,7 @@ class music(commands.Cog):
         source = discord.FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS)
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
         await ctx.send(embed=qb.first_song_playing(fetch[0]))
-      await msg.edit(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue))
+      await msg.edit(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
 
     else:
       fetch = search(message)
@@ -129,7 +126,7 @@ class music(commands.Cog):
   @commands.command(aliases=['queue', 'q', 'l'])
   async def list(self,ctx):
     if len(self.queue):
-      await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue). ) 
+      await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue) > 25 else None)
     else:
       await ctx.send(embed=qb.send_msg('There is no current queue'))  
 
@@ -137,7 +134,7 @@ class music(commands.Cog):
   async def remove(self,ctx,*,message):
     try:
       fetch = self.queue.pop(int(message)-1)
-      await ctx.send(embed=qb.removed_song(fetch[1]))
+      await ctx.send(embed=qb.removed_song(fetch[0]))
     except IndexError: 
       await ctx.send("Index error")
 
