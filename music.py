@@ -1,4 +1,3 @@
-from ntpath import join
 import discord
 from discord.ext import commands
 import yt_dlp
@@ -35,7 +34,6 @@ class music(commands.Cog):
       ctx.voice_client.play(fetch[0], after= lambda x : self.play_next(ctx))
       
       
-
   @commands.command(aliases=['add', 'p'])
   async def play(self,ctx,*,message):
     YDL_OPTIONS = {'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}
@@ -75,7 +73,6 @@ class music(commands.Cog):
           ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
           self.play_status = True 
           await ctx.send(embed=qb.first_song_playing(fetch[1]))
-
 
 
   @commands.command(aliases=['stop', 'hold'])
