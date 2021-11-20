@@ -13,6 +13,7 @@ def help_list(x):
   listembed = discord.Embed(title = 'Commands:', color=color_in)
   listembed.set_thumbnail(url = 'https://cdn.discordapp.com/attachments/901624454688440430/901664414963499079/musicStops.png')
   for i in range(len(x)):
+    x[i] = x[i].split(':')
     listembed.add_field(name=x[i][0], value = x[i][1], inline=False)
   return listembed   
 
