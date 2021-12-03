@@ -17,6 +17,11 @@ def help_list(x):
     listembed.add_field(name=x[i].split(':')[0], value = x[i].split(':')[1], inline=False)
   return listembed   
 
+def c_playing(x):
+  embed = discord.Embed(color=color_in)
+  embed.add_field(name = 'Currently Playing:', value = x, inline=False)
+  return embed  
+
 def first_song_playing(x):
   embed = discord.Embed(description =f'Playing {x}', color=color_in)
   return embed

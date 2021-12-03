@@ -1,12 +1,12 @@
 import discord
 from discord.ext import commands
-from discord.ui import view
 import yt_dlp
 import embeds as qb
 from search_yt import search
 import asyncio
 import random
 from qbuttons import Qbuttons
+import json
 
 class music(commands.Cog):
   def __init__(self, client):
@@ -17,6 +17,8 @@ class music(commands.Cog):
     self.play_status = False
     self.play_skip = False
     self.play_skip_int = 0
+    self.currently_playing = ''
+    self.json_file = "playlist.json"
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
     self.cmnds = ['join, j : joins the voice channel', 'leave : leaves the voice channel', 'play, p , add : plays song or appends it to queue', 'pause, stop, hold : pauses the song', 'resume, continue : resume playing','list, queue, l, q : displays the queue' , 'skip : skips song', 'clear, clr : clears the queue', 'remove, r, rm : removes a song from queue based on its index', 'loop: turns on or off a loop of the queue', 'shuffle: shuffles the order of the current queue', 'playskip, ps: playskips to a selected song']
 
@@ -58,6 +60,7 @@ class music(commands.Cog):
 
       source = discord.FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS)
       ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+      self.currently_playing = fetch[0]
       
       
   @commands.command(aliases=['add', 'p'])
@@ -84,6 +87,7 @@ class music(commands.Cog):
         fetch = self.queue.pop(0)
         source = discord.FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS)
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+        self.currently_playing = fetch[0]
         await ctx.send(embed=qb.first_song_playing(fetch[0]))
       await msg.edit(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
 
@@ -101,9 +105,33 @@ class music(commands.Cog):
       else:  
         source = await discord.FFmpegOpusAudio.from_probe(url2, **self.FFMPEG_OPTIONS)
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+        self.currently_playing = fetch[1]
         self.play_status = True 
         await ctx.send(embed=qb.first_song_playing(fetch[1]))
 
+  @commands.command()
+  async def play_load(self,ctx,x):
+    YDL_OPTIONS = {'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}
+    await asyncio.sleep(0.01)
+
+    if ctx.voice_client is None:
+        await ctx.author.voice.channel.connect()
+
+    print(x)
+    fetch = search(x)
+    print(fetch[1])
+
+    with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+        info = ydl.extract_info(fetch[0], download=False)
+        url2 = info['formats'][0]['url']
+
+    if ctx.voice_client.is_playing():
+      self.queue.append([fetch[1],url2])
+    else:  
+      source = await discord.FFmpegOpusAudio.from_probe(url2, **self.FFMPEG_OPTIONS)
+      ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+      self.currently_playing = fetch[1]
+      self.play_status = True 
 
   @commands.command(aliases=['stop', 'hold'])
   async def pause(self,ctx):
@@ -126,6 +154,7 @@ class music(commands.Cog):
   @commands.command(aliases=['queue', 'q', 'l'])
   async def list(self,ctx):
     if len(self.queue):
+      await ctx.send(embed=qb.c_playing(self.currently_playing))
       await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue) > 25 else None)
     else:
       await ctx.send(embed=qb.send_msg('There is no current queue'))  
@@ -176,13 +205,41 @@ class music(commands.Cog):
       await ctx.send(embed=qb.send_msg('Skip number not admissible'))
       return
     try:
-      await ctx.send(embed=qb.send_msg(f"Skipped to {int(message)} !"))
+      await ctx.send(embed=qb.send_msg(f"Skipped to {int(message)}!"))
       self.play_skip = True
       self.play_skip_int = int(message)-1
       await ctx.voice_client.stop()
       self.play_next(ctx)
     except (TypeError,AttributeError):
       return    
+
+  @commands.command()
+  async def save(self, ctx, *, message):
+    if len(self.queue):
+      with open(self.json_file) as json_in:
+        playlist_list = (json.load(json_in))
+      playlist_list['playlists'][message] = self.queue 
+
+      with open(self.json_file, 'w') as outfile:
+        json.dump(playlist_list, outfile)
+
+      await ctx.send(embed=qb.send_msg(f"Saved queue as {message}!"))
+    else:
+      await ctx.send(embed=qb.send_msg('No queue to save as a playlist!'))  
+
+  @commands.command()
+  async def load(self, ctx, *, message):
+    with open(self.json_file) as json_in:
+      playlist_list = (json.load(json_in))
+
+    if message in playlist_list['playlists']:
+      await ctx.send(embed=qb.send_msg('Loading playlist...'))
+      for song in playlist_list['playlists'][message]:
+        print(song[0])
+        await self.play_load(ctx, song[0])
+      await self.list(ctx)  
+    else:
+     await ctx.send(embed=qb.send_msg('Playlist name not valid!'))
 
 def setup(client):
   client.add_cog(music(client))   

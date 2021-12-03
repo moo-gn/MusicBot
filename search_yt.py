@@ -1,5 +1,6 @@
 import requests
 from html.parser import HTMLParser
+import urllib
 
 
 class TitleParser(HTMLParser):
@@ -31,6 +32,9 @@ class LinkParser(HTMLParser):
 
 
 def search(query):
+
+  #encode to URL safe 
+  query = urllib.parse.quote_plus(query)
 
   #Fetch the HTML of the search page
   url = f"https://www.youtube.com/results?search_query={query}"
