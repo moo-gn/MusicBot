@@ -20,7 +20,7 @@ class music(commands.Cog):
     self.currently_playing = ''
     self.json_file = "playlist.json"
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-    self.cmnds = ['join, j : joins the voice channel', 'leave : leaves the voice channel', 'play, p , add : plays song or appends it to queue', 'pause, stop, hold : pauses the song', 'resume, continue : resume playing','list, queue, l, q : displays the queue' , 'skip : skips song', 'clear, clr : clears the queue', 'remove, r, rm : removes a song from queue based on its index', 'loop: turns on or off a loop of the queue', 'shuffle: shuffles the order of the current queue', 'playskip, ps: playskips to a selected song']
+    self.cmnds = ['join, j : joins the voice channel', 'leave : leaves the voice channel', 'play, p , add : plays song or appends it to queue', 'pause, stop, hold : pauses the song', 'resume, continue : resume playing','list, queue, l, q : displays the queue' , 'skip : skips song', 'clear, clr : clears the queue', 'remove, r, rm : removes a song from queue based on its index', 'loop: turns on or off a loop of the queue', 'shuffle: shuffles the order of the current queue', 'playskip, ps: playskips to a selected song', 'save: saves the current queue', 'load: loads a playlist to the queue']
 
 
   @commands.command(aliases=['j'])
