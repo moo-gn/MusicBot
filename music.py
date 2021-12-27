@@ -55,7 +55,7 @@ class music(commands.Cog):
 
   @commands.command()
   async def current(self,ctx):
-    await ctx.send(embed=qb.send_msg(self.increment + ' ' + self.currently_playing))
+    await ctx.send(embed=qb.send_msg(str(self.increment) + ' ' + self.currently_playing))
 
   def if_end(self, x):
     if x >= len(self.queue):
