@@ -20,7 +20,19 @@ class music(commands.Cog):
     self.currently_playing = ''
     self.json_file = "playlist.json"
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-    self.cmnds = ['join, j : joins the voice channel', 'leave : leaves the voice channel', 'play, p , add : plays song or appends it to queue', 'pause, stop, hold : pauses the song', 'resume, continue : resume playing','list, queue, l, q : displays the queue' , 'skip : skips song', 'clear, clr : clears the queue', 'remove, r, rm : removes a song from queue based on its index', 'loop: turns on or off a loop of the queue', 'shuffle: shuffles the order of the current queue', 'playskip, ps: playskips to a selected song', 'save: saves the current queue', 'load: loads a playlist to the queue']
+    self.cmnds = ['join, j : joins the voice channel', 
+    'leave : leaves the voice channel', 
+    'play, p , add : plays song or appends it to queue', 
+    'pause, stop, hold : pauses the song', 
+    'resume, continue : resume playing',
+    'list, queue, l, q : displays the queue' , 
+    'skip : skips song', 'clear, clr : clears the queue', 
+    'remove, r, rm : removes a song from queue based on its index', 
+    'loop: turns on or off a loop of the queue', 
+    'shuffle: shuffles the order of the current queue', 
+    'playskip, ps: playskips to a selected song', 
+    'save: saves the current queue', 
+    'load: loads a playlist to the queue']
 
 
   @commands.command(aliases=['j'])
@@ -37,13 +49,22 @@ class music(commands.Cog):
   async def leave(self,ctx):
     await ctx.voice_client.disconnect()  
 
+  @commands.command()
+  async def position(self,ctx):
+    await ctx.send(embed=qb.send_msg(self.increment))
+
+  @commands.command()
+  async def current(self,ctx):
+    await ctx.send(embed=qb.send_msg(self.increment + ' ' + self.currently_playing))
+
   def if_end(self, x):
-    if x == len(self.queue):
+    if x >= len(self.queue):
       x = 0
     return x    
 
   def play_next(self, ctx):
     if len(self.queue) > 0:
+      #questionable
       self.increment += 1
       self.increment = self.if_end(self.increment)
       next = 0
@@ -85,7 +106,7 @@ class music(commands.Cog):
         
       if not ctx.voice_client.is_playing():
         fetch = self.queue.pop(0)
-        source = discord.FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS)
+        source = discord.FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS)
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
         self.currently_playing = fetch[0]
         await ctx.send(embed=qb.first_song_playing(fetch[0]))
@@ -97,7 +118,13 @@ class music(commands.Cog):
 
       with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
           info = ydl.extract_info(fetch[0], download=False)
-          url2 = info['formats'][0]['url']
+          #BEFORE PUSHING CHECK FOR URL
+          for format in info['formats']:
+              if 'url' in format:
+                  s = format['url'].lstrip('https://')
+                  if s[0] == 'r':
+                      url2 = format['url']
+                      break
 
       if ctx.voice_client.is_playing():
         self.queue.append([fetch[1],url2])
@@ -197,7 +224,8 @@ class music(commands.Cog):
   @commands.command()
   async def shuffle(self, ctx):
     await ctx.send(embed=qb.send_msg('Shuffled the queue!'))  
-    random.shuffle(self.queue)  
+    random.shuffle(self.queue) 
+    self.increment = -1 
 
   @commands.command(aliases=['ps'])
   async def playskip(self, ctx,*,message):

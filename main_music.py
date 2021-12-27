@@ -18,3 +18,4 @@ async def on_voice_state_update(member, before, after):
     await x.disconnect()
 
 client.run('ODk1NDI5NzIyNzA2Njc3ODAx.YV4b6g.n9D8aUDey_9eiMhMrMWQIbk0_Ik')
+#client.run('OTI1MDk4ODA5MDgyNjU4ODI2.YcoLZw.tAZa08XOdeZTLAT1is9VpysOPnE')
