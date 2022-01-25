@@ -33,8 +33,6 @@ class LinkParser(HTMLParser):
 
 def search(query):
 
-  #Add rule to check for audio
-  query = query + ' Audio'
   #encode to URL safe 
   query = urllib.parse.quote_plus(query)
 
