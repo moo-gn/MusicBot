@@ -214,11 +214,10 @@ class music(commands.Cog):
 
   @commands.command()
   async def loop(self, ctx):
+    self.loop = not self.loop
     if self.loop:
-      self.loop = False
       await ctx.send(embed=qb.send_msg('Queue loop turned off!'))
     else:
-      self.loop = True
       await ctx.send(embed=qb.send_msg('Queue loop turned on!')) 
 
   @commands.command()
