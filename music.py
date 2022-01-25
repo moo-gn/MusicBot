@@ -11,8 +11,8 @@ import json
 class music(commands.Cog):
   def __init__(self, client):
     self.client = client
-    self.queue = []
     self.increment = -1
+    self.queue = []
     self.loop = False
     self.play_status = False
     self.play_skip = False
