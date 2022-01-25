@@ -34,7 +34,7 @@ class music(commands.Cog):
     'save: saves the current queue', 
     'load: loads a playlist to the queue']
 
-
+  #Join the voice channel of the caller
   @commands.command(aliases=['j'])
   async def join(self,ctx):
     if ctx.author.voice is None:
@@ -44,31 +44,36 @@ class music(commands.Cog):
       await vc.connect()
     else:
       await ctx.voice_client.move_to(vc)      
-
+  
+  #Leave the current voice channel
   @commands.command()
   async def leave(self,ctx):
     await ctx.voice_client.disconnect()  
-
+  
+  #ADD COMMENT
   @commands.command()
   async def position(self,ctx):
     await ctx.send(embed=qb.send_msg(self.increment))
-
+  
+  #Print the song currently playing
   @commands.command()
   async def current(self,ctx):
     await ctx.send(embed=qb.send_msg(str(self.increment) + ' ' + self.currently_playing))
 
+  #Maintain indexing in bounds
   def if_end(self, x):
-    if x >= len(self.queue):
-      x = 0
+    x %= len(self.queue)
     return x    
-
+  
+  #ADD COMMMENT
   def play_next(self, ctx):
     if len(self.queue) > 0:
-      #questionable
+      
       self.increment += 1
       self.increment = self.if_end(self.increment)
       next = 0
-
+      
+      #Check flag for skipping to this song
       if self.play_skip:
         next = self.play_skip_int
         self.increment = next
@@ -78,12 +83,13 @@ class music(commands.Cog):
         fetch = self.queue[self.increment]
       else:  
         fetch = self.queue.pop(next)
-
+       
+      #ADD COMMENT 
       source = discord.FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS)
       ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
       self.currently_playing = fetch[0]
       
-      
+  #Play the requested song
   @commands.command(aliases=['add', 'p'])
   async def play(self,ctx,*,message):
     YDL_OPTIONS = {'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}
@@ -159,7 +165,8 @@ class music(commands.Cog):
       ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
       self.currently_playing = fetch[1]
       self.play_status = True 
-
+  
+  #Pause the music
   @commands.command(aliases=['stop', 'hold'])
   async def pause(self,ctx):
         self.play_status = False
@@ -168,7 +175,8 @@ class music(commands.Cog):
           await ctx.send(embed=qb.send_msg('Paused music!'))
         except (TypeError,AttributeError):
           return
-
+  
+  #Resume the music
   @commands.command(aliases=['continue'])
   async def resume(self,ctx):
     self.play_status = True 
@@ -177,15 +185,17 @@ class music(commands.Cog):
       await ctx.send(embed=qb.send_msg('Resume playing'))
     except (TypeError,AttributeError):
       return        
-
+  
+  #ADD COMMENT
   @commands.command(aliases=['queue', 'q', 'l'])
   async def list(self,ctx):
-    if len(self.queue):
+    if self.queue:
       await ctx.send(embed=qb.c_playing(self.currently_playing))
       await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue) > 25 else None)
     else:
       await ctx.send(embed=qb.send_msg('There is no current queue'))  
-
+  
+  #Remove song by index
   @commands.command(aliases=['r', 'rm'])
   async def remove(self,ctx,*,message):
     try:
@@ -193,12 +203,14 @@ class music(commands.Cog):
       await ctx.send(embed=qb.removed_song(fetch[0]))
     except IndexError: 
       await ctx.send("Index error")
-
+  
+  #Clear queue
   @commands.command(aliases=['clr'])
   async def clear(self, ctx):
     self.queue.clear()
     await ctx.send(embed=qb.send_msg('Cleared the queue!'))
-
+  
+  #Skip current song
   @commands.command(aliases=['s'])
   async def skip(self, ctx):
     try:
@@ -207,25 +219,27 @@ class music(commands.Cog):
       self.play_next(ctx)
     except (TypeError,AttributeError):
       return 
-
+  
+  #Display options
   @commands.command(aliases=['h'])
   async def help(self, ctx):
     await ctx.send(embed=qb.help_list(self.cmnds))  
-
+  
+  #Toggle looping the queue
   @commands.command()
   async def loop(self, ctx):
     self.loop = not self.loop
-    if self.loop:
-      await ctx.send(embed=qb.send_msg('Queue loop turned off!'))
-    else:
-      await ctx.send(embed=qb.send_msg('Queue loop turned on!')) 
-
+    bool = "on" if self.loop else "off"
+    await ctx.send(embed=qb.send_msg('Queue loop turned {0}!'.format(bool)))
+    
+  #Shuffle the queue                 
   @commands.command()
   async def shuffle(self, ctx):
     await ctx.send(embed=qb.send_msg('Shuffled the queue!'))  
     random.shuffle(self.queue) 
     self.increment = -1 
-
+  
+  #ADD COMMENT
   @commands.command(aliases=['ps'])
   async def playskip(self, ctx,*,message):
     if int(message)-1 > len(self.queue) - 1 or int(message)-1 < 1:
@@ -239,26 +253,31 @@ class music(commands.Cog):
       self.play_next(ctx)
     except (TypeError,AttributeError):
       return    
-
+  
+  #Save playlist
   @commands.command()
   async def save(self, ctx, *, message):
-    if len(self.queue):
+    if self.queue:
+      #Open the playlist directory and overwrite the saved playlist with current queue
       with open(self.json_file) as json_in:
         playlist_list = (json.load(json_in))
       playlist_list['playlists'][message] = self.queue 
-
+      
+      #Save the new directory
       with open(self.json_file, 'w') as outfile:
         json.dump(playlist_list, outfile)
 
       await ctx.send(embed=qb.send_msg(f"Saved queue as {message}!"))
     else:
       await ctx.send(embed=qb.send_msg('No queue to save as a playlist!'))  
-
+  
+  #Load playlist
   @commands.command()
   async def load(self, ctx, *, message):
     with open(self.json_file) as json_in:
       playlist_list = (json.load(json_in))
-
+      
+    #If the playlist is found, load into queue
     if message in playlist_list['playlists']:
       await ctx.send(embed=qb.send_msg('Loading playlist...'))
       for song in playlist_list['playlists'][message]:
