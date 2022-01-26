@@ -13,6 +13,7 @@ class music(commands.Cog):
     self.client = client
     self.increment = -1
     self.queue = []
+    self.bangers = []
     self.loop = False
     self.play_status = False
     self.play_skip = False
@@ -32,7 +33,9 @@ class music(commands.Cog):
     'shuffle: shuffles the order of the current queue', 
     'playskip, ps: playskips to a selected song', 
     'save: saves the current queue', 
-    'load: loads a playlist to the queue']
+    'load: loads a playlist to the queue', 
+    'bang: add a banger to the banger list', 
+    'banger: add a banger to the queue']
 
   #Join the voice channel of the caller
   @commands.command(aliases=['j'])
@@ -185,6 +188,16 @@ class music(commands.Cog):
       await ctx.send(embed=qb.send_msg('Resume playing'))
     except (TypeError,AttributeError):
       return        
+  
+  #Add Banger to banger  list UNFINISHED
+  @commands.command(aliases=['bang'])
+  async def bang(self,ctx):
+    pass   
+  
+  #Play Banger from banger list UNFINISHED
+  @commands.command(aliases=['banger'])
+  async def banger(self,ctx):
+    pass
   
   #ADD COMMENT
   @commands.command(aliases=['queue', 'q', 'l'])
