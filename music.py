@@ -68,7 +68,7 @@ class music(commands.Cog):
     x %= len(self.queue)
     return x    
   
-  #the function is called after the audio finishes playing
+  #the function is called after the audio finishes playing, it plays the next song in queue and removes it if loop is off
   def play_next(self, ctx):
     if len(self.queue) > 0:
       
@@ -119,7 +119,9 @@ class music(commands.Cog):
         
       if not ctx.voice_client.is_playing():
         fetch = self.queue.pop(0)
-        source = discord.FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS)
+        source = await discord.FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS)
+        if ctx.voice_client is None:
+          await ctx.author.voice.channel.connect()
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
         self.currently_playing = fetch[0]
         self.play_status = True 
@@ -144,12 +146,37 @@ class music(commands.Cog):
       if ctx.voice_client.is_playing():
         self.queue.append([fetch[1],url2])
         await ctx.send(embed=qb.add_song_playing(fetch[1]))
-      else:  
+      else: 
+        #create ffmpegOpusAudio from link and play it and send a message, call play_next after the song ends
         source = await discord.FFmpegOpusAudio.from_probe(url2, **self.FFMPEG_OPTIONS)
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
         self.currently_playing = fetch[1]
         self.play_status = True 
         await ctx.send(embed=qb.first_song_playing(fetch[1]))
+
+  #if client voice is playing add this song to the top of the queue
+  @commands.command(aliases=['pn'])
+  async def playnext(self, ctx, *, message):
+    if ctx.voice_client and ctx.voice_client.is_playing():
+      YDL_OPTIONS = {'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}
+
+      fetch = search(message)
+
+      with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+          info = ydl.extract_info(fetch[0], download=False)
+          #BEFORE PUSHING CHECK FOR URL
+          for format in info['formats']:
+              if 'url' in format:
+                  s = format['url'].lstrip('https://')
+                  if s[0] == 'r':
+                      url2 = format['url']
+                      break
+
+      self.queue.insert(0,[fetch[1],url2])
+      await ctx.send(embed=qb.playnext_embed(fetch[1]))
+    else:
+      await ctx.send(content= 'nothing is playing')
+
 
   @commands.command()
   async def play_load(self,ctx,x):

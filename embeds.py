@@ -7,7 +7,7 @@ def queue_list(x, page = 1):
   listembed.set_thumbnail(url = 'https://cdn.discordapp.com/attachments/901624454688440430/901664414963499079/musicStops.png')
   listembed.set_footer(text = '{0}/{1}'.format(page, -(-len(x)//25)) )
   for i in range((page -1)*25,len(x)):
-    listembed.add_field(name=f'{i + 1}.{x[i][0]}', value = '\u200b', inline=False)
+    listembed.add_field(name=f'{i + 1}. {x[i][0]}', value = '\u200b', inline=False)
   return listembed 
 
 def help_list(x):
@@ -24,6 +24,10 @@ def c_playing(x):
 
 def first_song_playing(x):
   embed = discord.Embed(description =f'Playing {x}', color=color_in)
+  return embed
+
+def playnext_embed(x):
+  embed = discord.Embed(description = f'{(x)} is gonna play next', color=color_in)
   return embed
 
 def add_song_playing(x):
