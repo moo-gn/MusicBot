@@ -119,7 +119,9 @@ class music(commands.Cog):
         
       if not ctx.voice_client.is_playing():
         fetch = self.queue.pop(0)
-        source = discord.FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS)
+        source = await discord.FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS)
+        if ctx.voice_client is None:
+          await ctx.author.voice.channel.connect()
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
         self.currently_playing = fetch[0]
         self.play_status = True 
