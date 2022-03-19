@@ -59,7 +59,7 @@ class music(commands.Cog):
     await ctx.send(embed=qb.send_msg(self.increment))
   
   #Print the song currently playing
-  @commands.command()
+  @commands.command(aliases=['c'])
   async def current(self,ctx):
     await ctx.send(embed=qb.send_msg(str(self.increment) + ' ' + self.currently_playing))
 
@@ -68,7 +68,7 @@ class music(commands.Cog):
     x %= len(self.queue)
     return x    
   
-  #ADD COMMMENT
+  #the function is called after the audio finishes playing
   def play_next(self, ctx):
     if len(self.queue) > 0:
       
@@ -84,13 +84,17 @@ class music(commands.Cog):
 
       if self.loop:
         fetch = self.queue[self.increment]
+        plcmnt = str(self.increment + 1) + '. '
       else:  
         fetch = self.queue.pop(next)
+        plcmnt = ''
        
-      #ADD COMMENT 
+      #create ffmpegOpusAudio from link and play it and send a message 
       source = discord.FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS)
       ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
       self.currently_playing = fetch[0]
+      #send the placement in the queue if its looping, and the name of song
+      self.client.loop.create_task(ctx.send(embed=qb.first_song_playing(plcmnt + fetch[0])))
       
   #Play the requested song
   @commands.command(aliases=['add', 'p'])
@@ -118,7 +122,9 @@ class music(commands.Cog):
         source = discord.FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS)
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
         self.currently_playing = fetch[0]
+        self.play_status = True 
         await ctx.send(embed=qb.first_song_playing(fetch[0]))
+
       await msg.edit(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
 
     else:
@@ -189,17 +195,17 @@ class music(commands.Cog):
     except (TypeError,AttributeError):
       return        
   
-  #Add Banger to banger  list UNFINISHED
-  @commands.command(aliases=['bang'])
-  async def bang(self,ctx):
-    pass   
+  # #Add Banger to banger  list UNFINISHED
+  # @commands.command(aliases=['bang'])
+  # async def bang(self,ctx):
+  #   pass   
   
-  #Play Banger from banger list UNFINISHED
-  @commands.command(aliases=['banger'])
-  async def banger(self,ctx):
-    pass
+  # #Play Banger from banger list UNFINISHED
+  # @commands.command(aliases=['banger'])
+  # async def banger(self,ctx):
+  #   pass
   
-  #ADD COMMENT
+  #SHOW AN EMBED FOR THE QUEUE
   @commands.command(aliases=['queue', 'q', 'l'])
   async def list(self,ctx):
     if self.queue:
@@ -252,7 +258,7 @@ class music(commands.Cog):
     random.shuffle(self.queue) 
     self.increment = -1 
   
-  #ADD COMMENT
+  #PLAY SKIP TO INDEX IN QUEUE
   @commands.command(aliases=['ps'])
   async def playskip(self, ctx,*,message):
     if int(message)-1 > len(self.queue) - 1 or int(message)-1 < 1:
