@@ -7,9 +7,10 @@ import asyncio
 import random
 from qbuttons import Qbuttons
 import json
+import lyricsgenius
 
 class music(commands.Cog):
-  def __init__(self, client):
+  def __init__(self, client, genius_token):
     self.client = client
     self.increment = -1
     self.queue = []
@@ -18,6 +19,7 @@ class music(commands.Cog):
     self.play_status = False
     self.play_skip = False
     self.play_skip_int = 0
+    self.genius = lyricsgenius.Genius(genius_token)
     self.currently_playing = ''
     self.json_file = "playlist.json"
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
@@ -32,6 +34,8 @@ class music(commands.Cog):
     'loop: turns on or off a loop of the queue', 
     'shuffle: shuffles the order of the current queue', 
     'playskip, ps: playskips to a selected song', 
+    'playnext, pn: adds new song to the start of the queue',
+    'lyrics, lyric, ly: sends lyrics of any song (default is current song)',
     'save: saves the current queue', 
     'load: loads a playlist to the queue', 
     'bang: add a banger to the banger list', 
@@ -95,7 +99,58 @@ class music(commands.Cog):
       self.currently_playing = fetch[0]
       #send the placement in the queue if its looping, and the name of song
       self.client.loop.create_task(ctx.send(embed=qb.first_song_playing(plcmnt + fetch[0])))
+
+  @commands.command(aliases=['ly','lyric'])
+  async def lyrics(self,ctx,*,message=None):
+
+    # Search for song by given name (Default is currently playing song)
+    if message:
+      song = self.genius.search_song(message)
+    else:
+      song = self.genius.search_song(self.currently_playing)
       
+    # If song is not found, relay error 
+    if not song:
+      await ctx.send(content="Could not find lyrics")
+      return
+
+
+    # Separating lyrics lines to lines
+    LRC = song.lyrics.split("\n")
+    first_line = LRC[0].split("Lyrics")
+
+    # Song name without whitespace
+    song_name = first_line[0][:-1]
+    artist = song.artist
+    LRC[0] = f"**{song_name} - {artist}**\n"
+
+    # Re-add the first lyric line
+    LRC.insert(1, (first_line[1]))
+
+    # Clean last line from numbers in the end
+    LRC[-1] = LRC[-1].replace("Embed","")
+    while True:
+      try:
+        last_word = LRC[-1]
+        if int(last_word[-1]):
+          last_word = last_word[:-1]
+          LRC[-1] = last_word
+      except:
+        break
+    
+    # Collect messages of length <2000 as fragments
+    message_fragments = []
+    while LRC:
+      s = ""
+      while LRC and (len(s) + len(LRC[0])) <= 2000:
+        s += LRC.pop(0) + "\n"
+      message_fragments.append(s)
+    
+    # Print each fragment as a separate message
+    for fragment in message_fragments:
+      await ctx.send(content=fragment)
+    
+
   #Play the requested song
   @commands.command(aliases=['add', 'p'])
   async def play(self,ctx,*,message):
@@ -333,5 +388,5 @@ class music(commands.Cog):
     else:
      await ctx.send(embed=qb.send_msg('Playlist name not valid!'))
 
-def setup(client):
-  client.add_cog(music(client))   
+def setup(client, genius_token):
+  client.add_cog(music(client, genius_token))   
