@@ -5,8 +5,12 @@ import music
 cogs = [music]
 client = commands.Bot(command_prefix='.', intents = discord.Intents.all(), case_insensitive = True, help_command=None)
 
+#Put your bot token here 
+TOKEN = ""
+GENIUS_TOKEN = ""
+
 for i in range(len(cogs)):
-  cogs[i].setup(client)
+  cogs[i].setup(client, GENIUS_TOKEN)
 
 @client.event
 async def on_voice_state_update(member, before, after):
@@ -17,6 +21,5 @@ async def on_voice_state_update(member, before, after):
         return
     await x.disconnect()
 
-#Put your bot token here 
-TOKEN = ""
+
 client.run(TOKEN)
