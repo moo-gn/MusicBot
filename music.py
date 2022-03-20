@@ -107,6 +107,9 @@ class music(commands.Cog):
     if message:
       song = self.genius.search_song(message)
     else:
+      if not self.currently_playing:
+        await ctx.send('No song is currently playing')
+        return
       song = self.genius.search_song(self.currently_playing)
       
     # If song is not found, relay error 
