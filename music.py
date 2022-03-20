@@ -107,6 +107,9 @@ class music(commands.Cog):
     if message:
       song = self.genius.search_song(message)
     else:
+      if not self.currently_playing:
+        await ctx.send('No song is currently playing')
+        return
       song = self.genius.search_song(self.currently_playing)
       
     # If song is not found, relay error 
@@ -227,7 +230,7 @@ class music(commands.Cog):
                       url2 = format['url']
                       break
 
-      self.queue.insert(0,[fetch[1],url2])
+      self.queue.insert(self.increment + 1,[fetch[1],url2])
       await ctx.send(embed=qb.playnext_embed(fetch[1]))
     else:
       await ctx.send(content= 'nothing is playing')
