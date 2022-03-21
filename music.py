@@ -20,7 +20,7 @@ class music(commands.Cog):
     self.play_skip = False
     self.play_skip_int = 0
     #initiate genuis object to search lyrics of songs
-    self.genius = lyricsgenius.Genius(genius_token, timeout=5, retries=2, excluded_terms=['spotify', 'hits', 'top'])
+    self.genius = lyricsgenius.Genius(genius_token, timeout=5, retries=2, excluded_terms=['spotify', 'top hits', 'Release Calendar'])
     self.currently_playing = ''
     self.json_file = "playlist.json"
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
@@ -111,7 +111,7 @@ class music(commands.Cog):
       if not self.currently_playing:
         await ctx.send('No song is currently playing')
         return
-      song = self.genius.search_song(self.currently_playing.split('(')[0])
+      song = self.genius.search_song(self.currently_playing.split('(', 1)[0].split('[', 1)[0])
       
     # If song is not found, relay error 
     if not song:
