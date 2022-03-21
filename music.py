@@ -334,6 +334,7 @@ class music(commands.Cog):
   async def loop(self, ctx):
     self.loop = not self.loop
     bool = "on" if self.loop else "off"
+    self.increment = -1 
     await ctx.send(embed=qb.send_msg('Queue loop turned {0}!'.format(bool)))
     
   #Shuffle the queue                 
