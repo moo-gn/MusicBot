@@ -135,10 +135,9 @@ class music(commands.Cog):
     LRC[-1] = LRC[-1].replace("Embed","")
     while True:
       try:
-        last_word = LRC[-1]
-        if int(last_word[-1]):
-          last_word = last_word[:-1]
-          LRC[-1] = last_word
+        last_line = LRC[-1]
+        if int(last_line[-1]) + 1: 
+          LRC[-1] = last_line[:-1]
       except:
         break
     
