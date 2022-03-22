@@ -1,4 +1,3 @@
-from socket import timeout
 import discord
 from discord.ext import commands
 import yt_dlp
