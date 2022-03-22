@@ -1,3 +1,4 @@
+from socket import timeout
 import discord
 from discord.ext import commands
 import yt_dlp
@@ -174,21 +175,20 @@ class music(commands.Cog):
       msg = await ctx.send(embed=qb.send_msg('adding playlist ...'))
       with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
         info = ydl.extract_info(message, download=False)
-      for entry in info['entries']:
-        self.queue.append([entry['title'], entry['url']])
+        for entry in info['entries']:
+          self.queue.append([entry['title'], entry['url']])
         
       if not ctx.voice_client.is_playing():
         fetch = self.queue.pop(0)
         source = await discord.FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS)
-        if ctx.voice_client is None:
-          await ctx.author.voice.channel.connect()
         ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
         self.currently_playing = fetch[0]
         self.play_status = True 
         await ctx.send(embed=qb.first_song_playing(fetch[0]))
 
-      await msg.edit(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
 
+      await msg.edit(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
+    # search youtube for message and get link from results
     else:
       fetch = search(message)
       print(fetch[1])
@@ -202,7 +202,7 @@ class music(commands.Cog):
                   if s[0] == 'r':
                       url2 = format['url']
                       break
-
+      #play or add to list if already
       if ctx.voice_client.is_playing():
         self.queue.append([fetch[1],url2])
         await ctx.send(embed=qb.add_song_playing(fetch[1]))
@@ -394,5 +394,5 @@ class music(commands.Cog):
     else:
      await ctx.send(embed=qb.send_msg('Playlist name not valid!'))
 
-def setup(client, genius_token):
-  client.add_cog(music(client, genius_token))   
+async def setup(client, genius_token):
+  await client.add_cog(music(client, genius_token))   
