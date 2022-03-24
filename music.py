@@ -20,7 +20,7 @@ class music(commands.Cog):
     self.play_skip = False
     self.play_skip_int = 0
     #initiate genuis object to search lyrics of songs
-    self.genius = lyricsgenius.Genius(genius_token, timeout=5, retries=2, excluded_terms=['spotify', 'top hits', 'Release Calendar', 'Best Songs'])
+    self.genius = lyricsgenius.Genius(genius_token, timeout=5, retries=2, excluded_terms=['spotify', 'top hits', 'Release Calendar', 'Best Songs', 'Genius Picks'])
     self.currently_playing = ''
     self.json_file = "playlist.json"
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
