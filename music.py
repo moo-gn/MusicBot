@@ -1,3 +1,4 @@
+from distutils.log import error
 import discord
 from discord.ext import commands
 import yt_dlp
@@ -14,10 +15,8 @@ class music(commands.Cog):
     self.client = client
     self.increment = -1
     self.queue = []
-    self.bangers = []
     self.loop = False
     self.play_status = False
-    # initiate genuis object to search lyrics of songs
     self.genius = lyricsgenius.Genius(genius_token, timeout=5, retries=2, excluded_terms=['spotify', 'top hits', 'Release Calendar', 'Best Songs', 'Genius Picks'])
     self.currently_playing = ''
     self.json_file = "playlist.json"
@@ -47,11 +46,10 @@ class music(commands.Cog):
   async def join(self,ctx):
     if ctx.author.voice is None:
       await ctx.send('Please join a voice channel!')
-    vc = ctx.author.voice.channel
     if ctx.voice_client is None:
-      await vc.connect()
+      await ctx.author.voice.channel.connect()
     else:
-      await ctx.voice_client.move_to(vc)      
+      await ctx.voice_client.move_to(ctx.author.voice.channel)      
   
   # Leave the current voice channel
   @commands.command()
@@ -72,27 +70,28 @@ class music(commands.Cog):
   def if_end(self, x):
     x %= len(self.queue)
     return x    
+
+  # Adhering to normal or loop mode
+  def load_next(self):
+    if self.loop:
+      fetch = self.queue[self.increment]
+      plcmnt = str(self.increment + 1) + '. '
+    else:  
+      fetch = self.queue.pop(0)
+      plcmnt = ''
+    return fetch, plcmnt
   
   # The function is called after the audio finishes playing, it plays the next song in queue and removes it if loop is off
-  def play_next(self, ctx):
+  def play_after(self, ctx):
     if len(self.queue) > 0:
-      
       self.increment += 1
       self.increment = self.if_end(self.increment)
-      next = 0
-
-      if self.loop:
-        fetch = self.queue[self.increment]
-        plcmnt = str(self.increment + 1) + '. '
-      else:  
-        fetch = self.queue.pop(next)
-        plcmnt = ''
-       
-      #create ffmpegOpusAudio from link and play it and send a message 
+      fetch, plcmnt = self.load_next()
+      # Create ffmpegOpusAudio from link and play it and send a message 
       source = discord.FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS)
-      ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+      ctx.voice_client.play(source, after= lambda x : self.play_after(ctx))
       self.currently_playing = fetch[0]
-      #send the placement in the queue if its looping, and the name of song
+      # Send the placement in the queue if its looping, and the name of song
       self.client.loop.create_task(ctx.send(embed=qb.song_playing(plcmnt + fetch[0])))
 
   @commands.command(aliases=['ly','lyric'])
@@ -146,7 +145,7 @@ class music(commands.Cog):
     for fragment in message_fragments:
       await ctx.send(content=fragment)
     
-  #Play the requested song
+  # Play the requested song
   @commands.command(aliases=['add', 'p'])
   async def play(self,ctx,*,message):
     YDL_OPTIONS = {'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}
@@ -155,11 +154,10 @@ class music(commands.Cog):
     if ctx.voice_client is None:
         await ctx.author.voice.channel.connect()
 
-
     if len(self.queue) > 100:
         await ctx.send(embed=qb.send_msg('Queue limit reached!'))
 
-    #if youtube playlist add each vid to the queue and play the first if its not playing
+    # If youtube playlist add each vid to the queue and play the first if its not playing
     elif message.startswith('https://www.youtube.com/playlist?list='):
       msg = await ctx.send(embed=qb.send_msg('adding playlist ...'))
       with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
@@ -170,40 +168,42 @@ class music(commands.Cog):
       if not ctx.voice_client.is_playing():
         fetch = self.queue.pop(0)
         source = await discord.FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS)
-        ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+        ctx.voice_client.play(source, after= lambda x : self.play_after(ctx))
         self.currently_playing = fetch[0]
         self.play_status = True 
         await ctx.send(embed=qb.song_playing(fetch[0]))
 
 
       await msg.edit(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
-    # search youtube for message and get link from results
+
+    # Search youtube for message and get link from results
     else:
       fetch = search(message)
       print(fetch[1])
 
       with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
           info = ydl.extract_info(fetch[0], download=False)
-          #BEFORE PUSHING CHECK FOR URL
+          #BEFORE PUSHING CHECK FOR AUDIO URL
           for format in info['formats']:
               if 'url' in format:
                   s = format['url'].lstrip('https://')
                   if s[0] == 'r':
                       url2 = format['url']
                       break
-      #play or add to list if already
+
+      # Play or add to list if already
       if ctx.voice_client.is_playing():
         self.queue.append([fetch[1],url2])
         await ctx.send(embed=qb.add_song_playing(fetch[1]))
       else: 
-        #create ffmpegOpusAudio from link and play it and send a message, call play_next after the song ends
+        # Create ffmpegOpusAudio from link and play it and send a message, call play_after after the song ends
         source = await discord.FFmpegOpusAudio.from_probe(url2, **self.FFMPEG_OPTIONS)
-        ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+        ctx.voice_client.play(source, after= lambda x : self.play_after(ctx))
         self.currently_playing = fetch[1]
         self.play_status = True 
         await ctx.send(embed=qb.song_playing(fetch[1]))
 
-  #if client voice is playing add this song to the top of the queue
+  # If client voice is playing add this song to the top of the queue
   @commands.command(aliases=['pn'])
   async def playnext(self, ctx, *, message):
     if ctx.voice_client and ctx.voice_client.is_playing():
@@ -235,9 +235,7 @@ class music(commands.Cog):
     if ctx.voice_client is None:
         await ctx.author.voice.channel.connect()
 
-    print(x)
     fetch = search(x)
-    print(fetch[1])
 
     with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
         info = ydl.extract_info(fetch[0], download=False)
@@ -247,27 +245,27 @@ class music(commands.Cog):
       self.queue.append([fetch[1],url2])
     else:  
       source = await discord.FFmpegOpusAudio.from_probe(url2, **self.FFMPEG_OPTIONS)
-      ctx.voice_client.play(source, after= lambda x : self.play_next(ctx))
+      ctx.voice_client.play(source, after= lambda x : self.play_after(ctx))
       self.currently_playing = fetch[1]
       self.play_status = True 
   
   # Pause the music
   @commands.command(aliases=['stop', 'hold'])
   async def pause(self,ctx):
-        self.play_status = False
         try:
           await ctx.voice_client.pause()
           await ctx.send(embed=qb.send_msg('Paused music!'))
+          self.play_status = False
         except (TypeError,AttributeError):
           return
   
   # Resume the music
   @commands.command(aliases=['continue'])
   async def resume(self,ctx):
-    self.play_status = True 
     try:
       await ctx.voice_client.resume() 
       await ctx.send(embed=qb.send_msg('Resume playing'))
+      self.play_status = True 
     except (TypeError,AttributeError):
       return        
   
@@ -299,19 +297,19 @@ class music(commands.Cog):
     except IndexError: 
       await ctx.send("Index error")
   
-  #Clear queue
+  # Clear queue
   @commands.command(aliases=['clr'])
   async def clear(self, ctx):
     self.queue.clear()
     await ctx.send(embed=qb.send_msg('Cleared the queue!'))
   
-  #Skip current song
+  # Skip current song
   @commands.command(aliases=['s'])
   async def skip(self, ctx):
     try:
       await ctx.send(embed=qb.send_msg('Skipped!'))
       await ctx.voice_client.stop()
-      self.play_next(ctx)
+      self.play_after(ctx)
     except (TypeError,AttributeError):
       return 
   
@@ -324,9 +322,7 @@ class music(commands.Cog):
   @commands.command()
   async def loop(self, ctx):
     self.loop = not self.loop
-    bool = "on" if self.loop else "off"
-    self.increment = -1 
-    await ctx.send(embed=qb.send_msg('Queue loop turned {0}!'.format(bool)))
+    await ctx.send(embed=qb.send_msg("Queue loop turned {status}".format(status="on" if self.loop else "off")))
     
   # Shuffle the queue                 
   @commands.command()
@@ -338,22 +334,20 @@ class music(commands.Cog):
   # PLAY SKIP TO INDEX IN QUEUE
   @commands.command(aliases=['ps'])
   async def playskip(self, ctx,*,message):
-    if int(message)-1 > len(self.queue) - 1 or int(message)-1 < 1:
-      await ctx.send(embed=qb.send_msg('Skip number not admissible'))
-      return
     try:
       await ctx.send(embed=qb.send_msg(f"Skipped to {int(message)}!"))
       self.queue.insert(self.queue[int(message)-1])
       self.queue.remove(int(message)-1)
       await ctx.voice_client.stop()
-      self.play_next(ctx)
-    except (TypeError,AttributeError):
-      return    
+      self.play_after(ctx)
+    except (TypeError, AttributeError, IndexError):
+      return
   
   # Save playlist
   @commands.command()
   async def save(self, ctx, *, message):
     if self.queue:
+
       #Open the playlist directory and overwrite the saved playlist with current queue
       with open(self.json_file) as json_in:
         playlist_list = (json.load(json_in))
@@ -362,8 +356,8 @@ class music(commands.Cog):
       #Save the new directory
       with open(self.json_file, 'w') as outfile:
         json.dump(playlist_list, outfile)
-
       await ctx.send(embed=qb.send_msg(f"Saved queue as {message}!"))
+
     else:
       await ctx.send(embed=qb.send_msg('No queue to save as a playlist!'))  
   
@@ -377,7 +371,6 @@ class music(commands.Cog):
     if message in playlist_list['playlists']:
       await ctx.send(embed=qb.send_msg('Loading playlist...'))
       for song in playlist_list['playlists'][message]:
-        print(song[0])
         await self.play_load(ctx, song[0])
       await self.list(ctx)  
     else:
