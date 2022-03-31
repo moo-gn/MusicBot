@@ -231,7 +231,7 @@ class music(commands.Cog):
                       url2 = format['url']
                       break
 
-      self.queue.insert(self.increment + 1,[fetch[1],url2])
+      self.queue.insert(0, [fetch[1],url2])
       await ctx.send(embed=qb.playnext_embed(fetch[1]))
     else:
       await ctx.send(content= 'nothing is playing')
