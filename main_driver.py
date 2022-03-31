@@ -1,13 +1,14 @@
 import discord
 from discord.ext import commands
 import music
+import credentials
 
 cogs = [music]
 client = commands.Bot(command_prefix='.', intents = discord.Intents.all(), case_insensitive = True, help_command=None)
 
 #Put your bot token here 
-TOKEN = ""
-GENIUS_TOKEN = ""
+TOKEN = credentials.bot
+GENIUS_TOKEN = credentials.genius
 
 @client.event
 async def on_ready():
