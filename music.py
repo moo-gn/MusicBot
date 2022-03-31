@@ -36,9 +36,7 @@ class music(commands.Cog):
     'playnext, pn: adds new song to the start of the queue',
     'lyrics, lyric, ly: sends lyrics of any song (default is current song)',
     'save: saves the current queue', 
-    'load: loads a playlist to the queue', 
-    'bang: add a banger to the banger list', 
-    'banger: add a banger to the queue'
+    'load: loads a playlist to the queue'
     ]
 
   """
