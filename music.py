@@ -336,7 +336,7 @@ class music(commands.Cog):
   async def playskip(self, ctx,*,message):
     try:
       await ctx.send(embed=qb.send_msg(f"Skipped to {int(message)}!"))
-      self.queue.insert(self.queue[int(message)-1])
+      self.queue.insert(0, self.queue[int(message)-1])
       self.queue.remove(int(message)-1)
       await ctx.voice_client.stop()
       self.play_after(ctx)
