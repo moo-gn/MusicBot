@@ -3,3 +3,6 @@ musicenv
 
 # Ignore credentials file
 credentials.py
+
+# Ignore testing file
+dissect.py

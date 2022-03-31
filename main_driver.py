@@ -25,6 +25,4 @@ async def on_voice_state_update(member, before, after):
         return
     await x.disconnect()
 
-
-
 client.run(TOKEN)
