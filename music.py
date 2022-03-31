@@ -19,7 +19,7 @@ class music(commands.Cog):
     self.play_status = False
     self.play_skip = False
     self.play_skip_int = 0
-    #initiate genuis object to search lyrics of songs
+    # initiate genuis object to search lyrics of songs
     self.genius = lyricsgenius.Genius(genius_token, timeout=5, retries=2, excluded_terms=['spotify', 'top hits', 'Release Calendar', 'Best Songs', 'Genius Picks'])
     self.currently_playing = ''
     self.json_file = "playlist.json"
@@ -42,7 +42,7 @@ class music(commands.Cog):
     'bang: add a banger to the banger list', 
     'banger: add a banger to the queue']
 
-  #Join the voice channel of the caller
+  # Join the voice channel of the caller
   @commands.command(aliases=['j'])
   async def join(self,ctx):
     if ctx.author.voice is None:
@@ -53,27 +53,27 @@ class music(commands.Cog):
     else:
       await ctx.voice_client.move_to(vc)      
   
-  #Leave the current voice channel
+  # Leave the current voice channel
   @commands.command()
   async def leave(self,ctx):
     await ctx.voice_client.disconnect()  
   
-  #ADD COMMENT
+  # Prints the current position of the increment
   @commands.command()
   async def position(self,ctx):
     await ctx.send(embed=qb.send_msg(self.increment))
   
-  #Print the song currently playing
+  # Print the song currently playing
   @commands.command(aliases=['c'])
   async def current(self,ctx):
     await ctx.send(embed=qb.send_msg(str(self.increment) + ' ' + self.currently_playing))
 
-  #Maintain indexing in bounds
+  # Maintain indexing in bounds
   def if_end(self, x):
     x %= len(self.queue)
     return x    
   
-  #the function is called after the audio finishes playing, it plays the next song in queue and removes it if loop is off
+  # the function is called after the audio finishes playing, it plays the next song in queue and removes it if loop is off
   def play_next(self, ctx):
     if len(self.queue) > 0:
       
