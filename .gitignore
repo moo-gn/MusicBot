@@ -6,3 +6,6 @@ credentials.py
 
 # Ignore testing file
 dissect.py
+
+# Ignore cache file
+__pycache__

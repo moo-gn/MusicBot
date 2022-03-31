@@ -88,7 +88,7 @@ class music(commands.Cog):
 
   """
   *************************
-      Function: Play
+      Function: play
       Parameters: str message - (the message parsed from the function call)
       Helper functions: append_playlist
   *************************
@@ -96,10 +96,9 @@ class music(commands.Cog):
   """
   # Appends the enrties in the playlist to the queue
   def append_playlist(self, message):
-      info = yt_dlp.YoutubeDL({'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}).extract_info(message, download=False)
-      for entry in info['entries']:
-          fetch, audio_url = self.song_info(entry['title'])
-          self.queue.append([fetch[1], audio_url])
+    info = yt_dlp.YoutubeDL({'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}).extract_info(message, download=False)
+    for entry in info['entries']:
+      self.queue.append([entry['title'], entry['url']])
 
   @commands.command(aliases=['add', 'p'])
   async def play(self,ctx,*,message):
@@ -117,7 +116,7 @@ class music(commands.Cog):
 
       # Else if play a youtube playlist request, add each vid to the queue and play the first if its not playing.
       elif message.startswith('https://www.youtube.com/playlist?list='):
-          msg = await ctx.send(embed=qb.send_msg('adding playlist ...'))
+          msg = await ctx.send(embed=qb.send_msg('Adding playlist, please wait as this might take some time.'))
 
           # Append songs from the playlist to the current queue
           self.append_playlist(message)
@@ -125,11 +124,11 @@ class music(commands.Cog):
           # If audio is not playing start playing songs from the beginning of the queue
           if not ctx.voice_client.is_playing():
               fetch = self.queue.pop(0)
-              ctx.voice_client.play(await discord.FFmpegOpusAudio.from_probe(audio_url, **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
-              self.currently_playing = fetch[1]
+              ctx.voice_client.play(await discord.FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
+              self.currently_playing = fetch[0]
               self.play_status = True 
-              await ctx.send(embed=qb.song_playing(fetch[1]))
-
+              await ctx.send(embed=qb.song_playing(fetch[0]))
+              
           # Display the new queue
           await msg.edit(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
 
