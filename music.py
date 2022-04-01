@@ -319,7 +319,7 @@ class music(commands.Cog):
     
   """
   *************************
-      Function: ressume
+      Function: resume
   *************************
   Description: Resumes audio playing.
   """
