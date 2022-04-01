@@ -238,6 +238,10 @@ class music(commands.Cog):
 
           # Send the placement in the queue if its looping, and the name of song
           self.client.loop.create_task(ctx.send(embed=qb.song_playing(plcmnt + fetch[0])))
+
+      else:
+        self.play_status = False
+
   
   """
   *************************
@@ -251,7 +255,7 @@ class music(commands.Cog):
   
   """
   *************************
-      Function: position
+      Function: current
   *************************
   Description: Prints song currently playing.
   """
