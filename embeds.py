@@ -22,7 +22,7 @@ def c_playing(x):
   embed.add_field(name = 'Currently Playing:', value = x, inline=False)
   return embed  
 
-def first_song_playing(x):
+def song_playing(x):
   embed = discord.Embed(description =f'Playing {x}', color=color_in)
   return embed
 
