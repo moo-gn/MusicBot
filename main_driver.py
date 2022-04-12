@@ -10,7 +10,7 @@ sys.path.append("..")
 import credentials
 
 #Put your bot token here 
-TOKEN = credentials.Music_Test
+TOKEN = credentials.Rhythm
 GENIUS_TOKEN = credentials.Genius
 
 @client.event
