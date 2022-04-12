@@ -5,9 +5,13 @@ import music
 cogs = [music]
 client = commands.Bot(command_prefix='.', intents = discord.Intents.all(), case_insensitive = True, help_command=None)
 
+import sys
+sys.path.append("..")
+import credentials
+
 #Put your bot token here 
-TOKEN = ""
-GENIUS_TOKEN = ""
+TOKEN = credentials.Music_Test
+GENIUS_TOKEN = credentials.Genius
 
 for i in range(len(cogs)):
   cogs[i].setup(client, GENIUS_TOKEN)
