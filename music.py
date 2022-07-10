@@ -126,7 +126,7 @@ class music(Cog):
       """
       for entry in data:
         # Add the song to the database
-        db_add_song(song=entry['title'], link=entry['url'])
+        #db_add_song(song=entry['title'], link=entry['url'])
         # Append to the queue
         self.queue.append([entry[0], entry[1]])
 
@@ -144,7 +144,7 @@ class music(Cog):
     info = yt_dlp.YoutubeDL({'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}).extract_info(link, download=False)
     for entry in info['entries']:
       # Add the song to the database
-      db_add_song(song=entry['title'], link=entry['url'])
+      #db_add_song(song=entry['title'], link=entry['url'])
       # Append to the queue
       self.queue.append([entry['title'], entry['url']])
     
@@ -191,7 +191,7 @@ class music(Cog):
         print(fetch[1])
 
         # Add the song to the database
-        db_add_song(song=fetch[1], link=fetch[0], ctx=ctx)
+        #db_add_song(song=fetch[1], link=fetch[0], ctx=ctx)
 
         # Play or add to list if already playing
         if ctx.voice_client.is_playing():
@@ -216,7 +216,7 @@ class music(Cog):
         fetch, audio_url = self.song_info(message)
 
         # Add the song to the database
-        db_add_song(song=fetch[1], link=fetch[0], ctx=ctx)
+        #db_add_song(song=fetch[1], link=fetch[0], ctx=ctx)
 
         # Insert to the top of the queue
         self.queue.insert(0, [fetch[1],audio_url])
@@ -254,7 +254,7 @@ class music(Cog):
       fetch, placement = self.load_next()
 
       # Add the song to the database
-      db_add_song(song=fetch[1], link=fetch[0], ctx=ctx)
+      #db_add_song(song=fetch[1], link=fetch[0], ctx=ctx)
 
       # Create ffmpegOpusAudio from link and play it
       ctx.voice_client.play(FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
