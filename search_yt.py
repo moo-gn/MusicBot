@@ -1,6 +1,6 @@
 import requests
 from html.parser import HTMLParser
-import urllib
+from urllib.parse import quote_plus
 
 
 class TitleParser(HTMLParser):
@@ -31,12 +31,16 @@ class LinkParser(HTMLParser):
       self.link = data[data.find('watch?v='):data.find('watch?v=') + 19]
 
 
-def search(query):
+def search(query: str):
+  """
+  Takes a query and returns a title and link of the first YouTube search response
+  :params: query - str
+  """
 
   #Add rule to check for audio
   query = query + ' Audio'
   #encode to URL safe 
-  query = urllib.parse.quote_plus(query)
+  query = quote_plus(query)
 
   #Fetch the HTML of the search page
   url = f"https://www.youtube.com/results?search_query={query}"
