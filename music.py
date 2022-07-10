@@ -2,12 +2,57 @@ from discord import Bot, FFmpegOpusAudio
 from discord.ext import commands
 from discord.ext.commands import Context, Cog
 from lyricsgenius import Genius
+from sshtunnel import SSHTunnelForwarder
+from pymysql import connect
 
 import asyncio, random, yt_dlp
 
 import embeds as qb
 from search_yt import search
 from qbuttons import Qbuttons
+
+import sys
+sys.path.append("..")
+import credentials
+
+def db_init():
+  """
+  Connects to the remote database, returns the database and its cursor
+  """
+  tunnel = SSHTunnelForwarder((credentials.ssh_website),
+                                ssh_username=credentials.ssh_website, ssh_password=credentials.ssh_password,
+                                remote_bind_address=(credentials.remote_bind_address, 3306),
+                             ) 
+  db = connect(
+      user=credentials.db_user,
+      passwd=credentials.db_passwd,
+      host=credentials.db_host, port=tunnel.local_bind_port,
+      db=credentials.db,
+  )
+
+  # Return cursor and db
+  return db.cursor(), db 
+
+def db_add_song(song: str, link: str, ctx: Context = None):
+  """
+  Adds a song to the database. If the song exists it increments its uses by 1 
+  """
+  # Init the cursor and database
+  cursor, db = db_init()
+
+  try:
+    cursor.execute(f"SELECT song FROM music WHERE song='{song}';")
+    exists = cursor.fetchall()
+    if len(exists) > 0:
+      cursor.execute(f"UPDATE music SET uses=uses+1 WHERE song='{song}';")
+    else:
+      cursor.execute(f"INSERT INTO music(song, uses, link) values ('{song}', '1', '{link}');")            
+    db.commit()
+  except Exception as e:
+    ctx.send(content=e)
+
+  # Close the database
+  db.close()
 
 async def setup(client: Bot, genius_token: str):
   """
@@ -81,6 +126,9 @@ class music(Cog):
     """
     info = yt_dlp.YoutubeDL({'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}).extract_info(link, download=False)
     for entry in info['entries']:
+      # Add the song to the database
+      db_add_song(song=entry['title'], link=entry['url'])
+      # Append to the queue
       self.queue.append([entry['title'], entry['url']])
 
   @commands.command(aliases=['add', 'p'])
@@ -124,6 +172,9 @@ class music(Cog):
         fetch, audio_url = self.song_info(message)
         print(fetch[1])
 
+        # Add the song to the database
+        db_add_song(song=fetch[1], link=fetch[0], ctx=ctx)
+
         # Play or add to list if already playing
         if ctx.voice_client.is_playing():
             self.queue.append([fetch[1],audio_url])
@@ -145,6 +196,9 @@ class music(Cog):
 
         # Gather information
         fetch, audio_url = self.song_info(message)
+
+        # Add the song to the database
+        db_add_song(song=fetch[1], link=fetch[0], ctx=ctx)
 
         # Insert to the top of the queue
         self.queue.insert(0, [fetch[1],audio_url])
@@ -180,6 +234,9 @@ class music(Cog):
 
       # Based on the play mode(normal or loop), determine the next song to be played and update the queue accordingly
       fetch, placement = self.load_next()
+
+      # Add the song to the database
+      db_add_song(song=fetch[1], link=fetch[0], ctx=ctx)
 
       # Create ffmpegOpusAudio from link and play it
       ctx.voice_client.play(FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
