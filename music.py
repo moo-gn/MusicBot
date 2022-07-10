@@ -120,6 +120,23 @@ class music(Cog):
                       break
     return fetch, audio_link
 
+  async def append_data(self, ctx: Context, data):
+      """
+      Appends the SQL data to the music queue
+      """
+      for entry in data:
+        # Add the song to the database
+        db_add_song(song=entry['title'], link=entry['url'])
+        # Append to the queue
+        self.queue.append([entry[0], entry[1]])
+
+      # If audio is not playing start playing songs from the beginning of the queue
+      if not ctx.voice_client.is_playing():
+          fetch = self.queue.pop(0)
+          ctx.voice_client.play(await FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
+          self.currently_playing = fetch[0]
+          await ctx.send(embed=qb.song_playing(fetch[0]))
+
   def append_playlist(self, link: str):
     """
     Appends the youtube playlist to the music queue
@@ -130,6 +147,7 @@ class music(Cog):
       db_add_song(song=entry['title'], link=entry['url'])
       # Append to the queue
       self.queue.append([entry['title'], entry['url']])
+    
 
   @commands.command(aliases=['add', 'p'])
   async def play(self, ctx: Context, *, message: str):
