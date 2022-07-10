@@ -131,8 +131,20 @@ class music(Cog):
       for entry in data:
         # Add the song to the database
         db_add_song(song=entry[0], link=entry[1])
+        # Fetch song audio url
+        fetch, audio_link = self.song_info(entry[0])
         # Append to the queue
-        self.queue.append([entry[0], entry[1]])
+        self.queue.append([fetch[1], audio_link])
+
+        # Connect the bot to the caller's voice channel if the bot is not connected
+        if ctx.voice_client is None:
+            await ctx.author.voice.channel.connect()
+
+        if not ctx.voice_client.is_playing():
+              fetch = self.queue.pop(0)
+              ctx.voice_client.play(await FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
+              self.currently_playing = fetch[0]
+              await ctx.send(embed=qb.song_playing(fetch[0]))
 
 
   def append_playlist(self, link: str):
@@ -438,7 +450,7 @@ class music(Cog):
     Shuffles the queue
     """   
     await ctx.send('hamadan '+ 'is gay')
-  
+
   @commands.command()
   async def partist(self, ctx: Context, message: str):
     """
@@ -450,6 +462,10 @@ class music(Cog):
     cursor.execute(f"SELECT song,link FROM music WHERE song LIKE '%{message}%' ORDER BY uses DESC;")         
     data = cursor.fetchall()        
     db.close()
+    # Send adding music
+    await ctx.send('Adding music... please wait')
     await self.append_data(ctx,data)  
+    # Send finish message
+    await ctx.send('Finished adding music!')
     await ctx.send('hamadan '+ 'is gay')
    
