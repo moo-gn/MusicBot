@@ -1,6 +1,6 @@
 from discord import Bot, FFmpegOpusAudio
 from discord.ext import commands
-from discord.ext.commands import Context
+from discord.ext.commands import Context, Cog
 from lyricsgenius import Genius
 
 import asyncio, random, yt_dlp
@@ -15,7 +15,7 @@ async def setup(client: Bot, genius_token: str):
   """
   client.add_cog(music(client, genius_token))   
 
-class music(commands.Cog):
+class music(Cog):
   def __init__(self, client: Bot, genius_token: Genius):
     self.client: Bot = client
     self.genius: Genius = Genius(genius_token, timeout=5, retries=2, excluded_terms=['spotify', 'top hits', 'Release Calendar', 'Best Songs', 'Genius Picks'])
@@ -135,7 +135,6 @@ class music(commands.Cog):
             self.currently_playing = fetch[1]
             await ctx.send(embed=qb.song_playing(fetch[1]))
 
-  # If client voice is playing add this song to the top of the queue
   @commands.command(aliases=['pn'])
   async def playnext(self, ctx: Context, *, message: str):
     """
@@ -149,7 +148,7 @@ class music(commands.Cog):
 
         # Insert to the top of the queue
         self.queue.insert(0, [fetch[1],audio_url])
-        await ctx.send(embed=qb.playnext_embed(fetch[1]))
+        await ctx.send(embed=qb.play_next(fetch[1]))
 
     # If the client is not playing send the following message
     else:

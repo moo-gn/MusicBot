@@ -35,6 +35,13 @@ def c_playing(song_name: str):
   embed.add_field(name = 'Currently Playing:', value = song_name, inline=False)
   return embed  
 
+def play_next(song_name: str):
+  """
+  Generates an embed in the form "Playing {song_name} next"
+  :params: song_name - str
+  """
+  return Embed(description =f'Playing {song_name} next', color=color_in)
+
 def song_playing(song_name: str):
   """
   Generates an embed in the form "Playing {song_name}"
