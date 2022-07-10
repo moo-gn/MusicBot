@@ -259,7 +259,7 @@ class music(commands.Cog):
       await ctx.send(content=fragment)
     
   @commands.command(aliases=['continue'])
-  async def resume(self,ctx):
+  async def resume(self, ctx: Context):
     """
     Resumes audio playing
     """
@@ -303,7 +303,7 @@ class music(commands.Cog):
       await ctx.send("Index error")
   
   @commands.command(aliases=['clr'])
-  async def clear(self, ctx):
+  async def clear(self, ctx: Context):
     """
     Clears the queue
     """
