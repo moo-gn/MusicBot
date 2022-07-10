@@ -433,3 +433,11 @@ class music(Cog):
       await ctx.send(embed=qb.send_msg(f"Skipped to {int(message)}!"))
     except (TypeError, AttributeError, IndexError):
       return
+
+  @commands.command()
+  async def who(self, ctx: Context):
+    """
+    Shuffles the queue
+    """   
+    await ctx.send('hamadan '+ 'is gay')
+   
