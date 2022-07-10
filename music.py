@@ -130,16 +130,10 @@ class music(Cog):
       """
       for entry in data:
         # Add the song to the database
-        db_add_song(song=entry['title'], link=entry['url'])
+        db_add_song(song=entry[0], link=entry[1])
         # Append to the queue
         self.queue.append([entry[0], entry[1]])
 
-      # If audio is not playing start playing songs from the beginning of the queue
-      if not ctx.voice_client.is_playing():
-          fetch = self.queue.pop(0)
-          ctx.voice_client.play(await FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
-          self.currently_playing = fetch[0]
-          await ctx.send(embed=qb.song_playing(fetch[0]))
 
   def append_playlist(self, link: str):
     """
@@ -443,5 +437,19 @@ class music(Cog):
     """
     Shuffles the queue
     """   
+    await ctx.send('hamadan '+ 'is gay')
+  
+  @commands.command()
+  async def partist(self, ctx: Context, message: str):
+    """
+    Play song from specific artist chosen by the user
+    """ 
+    # Intilizie cursor and db         
+    cursor, db = db_init()          
+    # #Select all the current data in the database and display it         
+    cursor.execute(f"SELECT song,link FROM music WHERE song LIKE '%{message}%' ORDER BY uses DESC;")         
+    data = cursor.fetchall()        
+    db.close()
+    await self.append_data(ctx,data)  
     await ctx.send('hamadan '+ 'is gay')
    
