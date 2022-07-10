@@ -468,4 +468,20 @@ class music(Cog):
     # Send finish message
     await ctx.send('Finished adding music!')
     await ctx.send('hamadan '+ 'is gay')
-   
+  
+  @commands.command()
+  async def randy(self, ctx: Context):
+    """
+    Plays 5 random songs
+    """ 
+    # Intilizie cursor and db
+    cursor, db = db_init()          
+    # #Select all the current data in the database and display it         
+    cursor.execute(f"select song,uses FROM music WHERE uses > 10 ORDER BY rand() LIMIT 5;")         
+    data = cursor.fetchall()        
+    db.close()
+    # Send adding music
+    await ctx.send('Adding music... please wait')
+    await self.append_data(ctx,data)  
+    # Send finish message
+    await ctx.send('hamadan '+ 'is gay')
