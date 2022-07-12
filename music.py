@@ -453,13 +453,6 @@ class music(Cog):
       return
 
   @commands.command()
-  async def who(self, ctx: Context):
-    """
-    Shuffles the queue
-    """   
-    await ctx.send('hamadan '+ 'is gay')
-
-  @commands.command()
   async def partist(self, ctx: Context, *, message: str):
     """
     Play song from specific artist chosen by the user
@@ -473,23 +466,27 @@ class music(Cog):
       db.close()
 
       if data:
-        await self.append_data(ctx,data)  
+        await self.append_data(ctx,data)
+        await ctx.send(qb.queue_list(self.queue))  
       else:
-        await ctx.send('404 Artist not found')
+        await ctx.send('*[ERROR 404]* Artist not found')
 
     except Exception as e:
-      await ctx.send('404 partist error: ' + e)
+      await ctx.send('*[ERROR 404]* partist error: ' + e)
 
   @commands.command()
-  async def prandy(self, ctx: Context, *, message: str = None):
+  async def prandy(self, ctx: Context, message: str = None):
     """
-    Plays 5 random songs
+    Play random songs
     """ 
     # Intilizie cursor and db
     cursor, db = db_init()   
     if message:
-      # If artist name is found
-      cursor.execute(f"select song,link FROM music WHERE song LIKE '%{message}%' ORDER BY rand() LIMIT 5;")   
+      # If limit is found
+      try:
+        cursor.execute(f"select song,link FROM music WHERE uses > 10 ORDER BY rand() LIMIT {message};")
+      except:
+        await ctx.send('*[ERROR 404]* Invalid number')   
     else:
       #Select all the current data in the database and display it         
       cursor.execute(f"select song,link FROM music WHERE uses > 10 ORDER BY rand() LIMIT 5;")         
@@ -498,3 +495,4 @@ class music(Cog):
     db.close()
     # Add the music
     await self.append_data(ctx,data)  
+    await ctx.send(qb.queue_list(self.queue))
