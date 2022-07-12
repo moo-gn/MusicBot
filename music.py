@@ -473,11 +473,7 @@ class music(Cog):
       db.close()
 
       if data:
-        # Send adding music
-        await ctx.send('Adding music... please wait')
         await self.append_data(ctx,data)  
-        # Send finish message
-        await ctx.send('Finished adding music')
       else:
         await ctx.send('404 Artist not found')
 
@@ -500,8 +496,5 @@ class music(Cog):
 
     data = cursor.fetchall()        
     db.close()
-    # Send adding music
-    await ctx.send('Adding music... please wait')
+    # Add the music
     await self.append_data(ctx,data)  
-    # Send finish message
-    await ctx.send('Finished adding music')
