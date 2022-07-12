@@ -87,6 +87,8 @@ class music(Cog):
     'playskip, ps: playskips to a selected song', 
     'playnext, pn: adds new song to the start of the queue',
     'lyrics, lyric, ly: sends lyrics of any song (default is current song)',
+    'partist: plays songs from the database from specific artist chosen by the user',
+    'prandy: plays 5 random song from the database. You can specify an artist to play from.'
     ]
 
   @commands.command(aliases=['j'])
@@ -365,7 +367,7 @@ class music(Cog):
     Pauses audio playing
     """
     try:
-      await ctx.voice_client.stop() 
+      await ctx.voice_client.pause() 
       await ctx.send(embed=qb.send_msg('Stop playing'))
     except (TypeError,AttributeError):
       return        
@@ -483,7 +485,7 @@ class music(Cog):
       await ctx.send('404 partist error: ' + e)
 
   @commands.command()
-  async def prandy(self, ctx: Context, *, message: str):
+  async def prandy(self, ctx: Context, *, message: str = None):
     """
     Plays 5 random songs
     """ 
