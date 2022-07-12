@@ -467,7 +467,7 @@ class music(Cog):
 
       if data:
         await self.append_data(ctx,data)
-        await ctx.send(qb.queue_list(self.queue))  
+        await ctx.send(embed=qb.queue_list(self.queue))  
       else:
         await ctx.send('*[ERROR 404]* Artist not found')
 
@@ -495,4 +495,4 @@ class music(Cog):
     db.close()
     # Add the music
     await self.append_data(ctx,data)  
-    await ctx.send(qb.queue_list(self.queue))
+    await ctx.send(embed=qb.queue_list(self.queue))
