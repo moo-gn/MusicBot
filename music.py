@@ -484,12 +484,12 @@ class music(Cog):
     if message:
       # If limit is found
       try:
-        cursor.execute(f"select song,link FROM music WHERE uses > 10 ORDER BY rand() LIMIT {message};")
+        cursor.execute(f"select song,link FROM music WHERE uses > 5 ORDER BY rand() LIMIT {message};")
       except:
         await ctx.send('*[ERROR 404]* Invalid number')   
     else:
       #Select all the current data in the database and display it         
-      cursor.execute(f"select song,link FROM music WHERE uses > 10 ORDER BY rand() LIMIT 5;")         
+      cursor.execute(f"select song,link FROM music WHERE uses > 5 ORDER BY rand() LIMIT 5;")         
 
     data = cursor.fetchall()        
     db.close()
