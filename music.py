@@ -132,9 +132,15 @@ class music(Cog):
         # Add the song to the database
         db_add_song(song=entry[0], link=entry[1])
         # Fetch song audio url
-        fetch, audio_link = self.song_info(entry[0])
+        info = yt_dlp.YoutubeDL({'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}).extract_info(entry[1], download=False)
+        for format in info['formats']:
+                  if 'url' in format:
+                      s = format['url'].lstrip('https://')
+                      if s[0] == 'r':
+                          audio_link = format['url']
+                          break
         # Append to the queue
-        self.queue.append([fetch[1], audio_link])
+        self.queue.append([entry[0], audio_link])
 
         # Connect the bot to the caller's voice channel if the bot is not connected
         if ctx.voice_client is None:
@@ -477,7 +483,7 @@ class music(Cog):
       await ctx.send('404 partist error: ' + e)
 
   @commands.command()
-  async def randy(self, ctx: Context, *, message: str):
+  async def prandy(self, ctx: Context, *, message: str):
     """
     Plays 5 random songs
     """ 
@@ -485,10 +491,10 @@ class music(Cog):
     cursor, db = db_init()   
     if message:
       # If artist name is found
-      cursor.execute(f"select song,uses FROM music WHERE song LIKE '%{message}%' ORDER BY rand() LIMIT 5;")   
+      cursor.execute(f"select song,link FROM music WHERE song LIKE '%{message}%' ORDER BY rand() LIMIT 5;")   
     else:
       #Select all the current data in the database and display it         
-      cursor.execute(f"select song,uses FROM music WHERE uses > 10 ORDER BY rand() LIMIT 5;")         
+      cursor.execute(f"select song,link FROM music WHERE uses > 10 ORDER BY rand() LIMIT 5;")         
 
     data = cursor.fetchall()        
     db.close()
