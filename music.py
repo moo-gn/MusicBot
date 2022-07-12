@@ -452,36 +452,48 @@ class music(Cog):
     await ctx.send('hamadan '+ 'is gay')
 
   @commands.command()
-  async def partist(self, ctx: Context, message: str):
+  async def partist(self, ctx: Context, *, message: str):
     """
     Play song from specific artist chosen by the user
-    """ 
-    # Intilizie cursor and db         
-    cursor, db = db_init()          
-    # #Select all the current data in the database and display it         
-    cursor.execute(f"SELECT song,link FROM music WHERE song LIKE '%{message}%' ORDER BY uses DESC;")         
-    data = cursor.fetchall()        
-    db.close()
-    # Send adding music
-    await ctx.send('Adding music... please wait')
-    await self.append_data(ctx,data)  
-    # Send finish message
-    await ctx.send('Finished adding music!')
-    await ctx.send('hamadan '+ 'is gay')
-  
+    """
+    try: 
+      # Intilizie cursor and db         
+      cursor, db = db_init()          
+      # #Select all the current data in the database and display it         
+      cursor.execute(f"SELECT song,link FROM music WHERE song LIKE '%{message}%' ORDER BY rand() LIMIT 10;")         
+      data = cursor.fetchall()        
+      db.close()
+
+      if data:
+        # Send adding music
+        await ctx.send('Adding music... please wait')
+        await self.append_data(ctx,data)  
+        # Send finish message
+        await ctx.send('Finished adding music')
+      else:
+        await ctx.send('404 Artist not found')
+
+    except Exception as e:
+      await ctx.send('404 partist error: ' + e)
+
   @commands.command()
-  async def randy(self, ctx: Context):
+  async def randy(self, ctx: Context, *, message: str):
     """
     Plays 5 random songs
     """ 
     # Intilizie cursor and db
-    cursor, db = db_init()          
-    # #Select all the current data in the database and display it         
-    cursor.execute(f"select song,uses FROM music WHERE uses > 10 ORDER BY rand() LIMIT 5;")         
+    cursor, db = db_init()   
+    if message:
+      # If artist name is found
+      cursor.execute(f"select song,uses FROM music WHERE song LIKE '%{message}%' ORDER BY rand() LIMIT 5;")   
+    else:
+      #Select all the current data in the database and display it         
+      cursor.execute(f"select song,uses FROM music WHERE uses > 10 ORDER BY rand() LIMIT 5;")         
+
     data = cursor.fetchall()        
     db.close()
     # Send adding music
     await ctx.send('Adding music... please wait')
     await self.append_data(ctx,data)  
     # Send finish message
-    await ctx.send('hamadan '+ 'is gay')
+    await ctx.send('Finished adding music')

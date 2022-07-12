@@ -3,14 +3,14 @@ from discord.ext import commands
 import music
 
 cogs = [music]
-client = commands.Bot(command_prefix='_', intents = discord.Intents.all(), case_insensitive = True, help_command=None)
+client = commands.Bot(command_prefix='.', intents = discord.Intents.all(), case_insensitive = True, help_command=None)
 
 import sys
 sys.path.append("..")
 import credentials
 
 #Put your bot token here 
-TOKEN = credentials.Music_Test
+TOKEN = credentials.Rhythm
 GENIUS_TOKEN = credentials.Genius
 
 @client.event
