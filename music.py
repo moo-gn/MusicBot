@@ -88,7 +88,7 @@ class music(Cog):
     'playnext, pn: adds new song to the start of the queue',
     'lyrics, lyric, ly: sends lyrics of any song (default is current song)',
     'partist: plays songs from the database from specific artist chosen by the user',
-    'prandy: plays 5 random song from the database. You can specify an artist to play from.'
+    'prandy: plays 5 random song from the database. You can specify a number to play'
     ]
 
   @commands.command(aliases=['j'])
