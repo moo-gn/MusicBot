@@ -469,10 +469,10 @@ class music(Cog):
         await self.append_data(ctx,data)
         await ctx.send(embed=qb.queue_list(self.queue))  
       else:
-        await ctx.send('*[ERROR 404]* Artist not found')
+        await ctx.send('**[ERROR 404]** Artist not found')
 
     except Exception as e:
-      await ctx.send('*[ERROR 404]* partist error: ' + e)
+      await ctx.send('**[ERROR 404]** partist error: ' + e)
 
   @commands.command()
   async def prandy(self, ctx: Context, message: str = None):
@@ -486,7 +486,7 @@ class music(Cog):
       try:
         cursor.execute(f"select song,link FROM music WHERE uses > 5 ORDER BY rand() LIMIT {message};")
       except:
-        await ctx.send('*[ERROR 404]* Invalid number')   
+        await ctx.send('**[ERROR 404]** Invalid number')   
     else:
       #Select all the current data in the database and display it         
       cursor.execute(f"select song,link FROM music WHERE uses > 5 ORDER BY rand() LIMIT 5;")         
