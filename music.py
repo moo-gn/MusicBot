@@ -1,4 +1,4 @@
-from discord import Bot, FFmpegOpusAudio
+from discord import Bot, FFmpegPCMAudio
 from discord.ext import commands
 from discord.ext.commands import Context, Cog
 from lyricsgenius import Genius
@@ -150,7 +150,7 @@ class music(Cog):
 
         if not ctx.voice_client.is_playing():
               fetch = self.queue.pop(0)
-              ctx.voice_client.play(await FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
+              ctx.voice_client.play(FFmpegPCMAudio(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
               self.currently_playing = fetch[0]
               await ctx.send(embed=qb.song_playing(fetch[0]))
 
@@ -194,7 +194,7 @@ class music(Cog):
         # If audio is not playing start playing songs from the beginning of the queue
         if not ctx.voice_client.is_playing():
             fetch = self.queue.pop(0)
-            ctx.voice_client.play(await FFmpegOpusAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
+            ctx.voice_client.play(await FFmpegPCMAudio.from_probe(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
             self.currently_playing = fetch[0]
             await ctx.send(embed=qb.song_playing(fetch[0]))
             
@@ -216,9 +216,9 @@ class music(Cog):
             self.queue.append([fetch[1],audio_url])
             await ctx.send(embed=qb.add_song_playing(fetch[1]))
 
-        # Create ffmpegOpusAudio from link and play it and send a message, call play_after after the song ends
+        # Create FFmpegPCMAudio from link and play it and send a message, call play_after after the song ends
         else: 
-            ctx.voice_client.play(await FFmpegOpusAudio.from_probe(audio_url, **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
+            ctx.voice_client.play(FFmpegPCMAudio(audio_url, **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
             self.currently_playing = fetch[1]
             await ctx.send(embed=qb.song_playing(fetch[1]))
 
@@ -274,8 +274,8 @@ class music(Cog):
       # Add the song to the database
       db_add_song(song=fetch[1], link=fetch[0], ctx=ctx)
 
-      # Create ffmpegOpusAudio from link and play it
-      ctx.voice_client.play(FFmpegOpusAudio(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
+      # Create FFmpegPCMAudio from link and play it
+      ctx.voice_client.play(FFmpegPCMAudio(fetch[1], **self.FFMPEG_OPTIONS), after= lambda x : self.play_after(ctx))
 
       # Update the song that is currently playing
       self.currently_playing = fetch[0]
