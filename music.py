@@ -5,7 +5,8 @@ from lyricsgenius import Genius
 from sshtunnel import SSHTunnelForwarder
 from pymysql import connect
 
-import asyncio, random, yt_dlp
+import asyncio, random
+import yt_dlp as youtube_dl
 
 import embeds as qb
 from search_yt import search
@@ -117,13 +118,17 @@ class music(Cog):
     :return: fetch - (video_link, song_name), audio_link - (link of the audio of the youtube clip)
     """
     fetch = search(inquiry)
-    info = yt_dlp.YoutubeDL({'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}).extract_info(fetch[0], download=False)
+    print("youtube dling")
+    print(fetch[0])
+    info = youtube_dl.YoutubeDL({'format':'bestaudio', "noplaylist": "True"}).extract_info(fetch[0], download=False)
+    print("finished youtube dling")
     for format in info['formats']:
               if 'url' in format:
                   s = format['url'].lstrip('https://')
                   if s[0] == 'r':
                       audio_link = format['url']
                       break
+    print(audio_link)
     return fetch, audio_link
 
   async def append_data(self, ctx: Context, data):
@@ -134,7 +139,7 @@ class music(Cog):
         # Add the song to the database
         db_add_song(song=entry[0], link=entry[1])
         # Fetch song audio url
-        info = yt_dlp.YoutubeDL({'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}).extract_info(entry[1], download=False)
+        info = youtube_dl.YoutubeDL({'format':'bestaudio', "noplaylist": "True"}).extract_info(entry[1], download=False)
         for format in info['formats']:
                   if 'url' in format:
                       s = format['url'].lstrip('https://')
@@ -159,7 +164,7 @@ class music(Cog):
     """
     Appends the youtube playlist to the music queue
     """
-    info = yt_dlp.YoutubeDL({'format':'bestaudio', 'playlistrandom': True, 'quiet' : True}).extract_info(link, download=False)
+    info = youtube_dl.YoutubeDL({'format':'bestaudio', "noplaylist": "True"}).extract_info(link, download=False)
     for entry in info['entries']:
       # Add the song to the database
       db_add_song(song=entry['title'], link=entry['url'])
