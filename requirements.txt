@@ -15,6 +15,7 @@ lyricsgenius==3.0.1
 multidict==6.0.4
 mutagen==1.46.0
 paramiko==3.0.0
+pip-autoremove==0.10.0
 py-cord==2.4.0
 pycparser==2.21
 pycryptodomex==3.17

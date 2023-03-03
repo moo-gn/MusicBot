@@ -74,6 +74,7 @@ class music(Cog):
     self.loop = False
     self.currently_playing = ''
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+    self.yt_OPTIONS = {'format':'bestaudio', "noplaylist": "True", 'verbose': True}
     self.cmnds = [
     'join, j : joins the voice channel', 
     'leave : leaves the voice channel', 
@@ -117,18 +118,18 @@ class music(Cog):
     :params: inquiry - (intended to be the inquiry of what is to be played)
     :return: fetch - (video_link, song_name), audio_link - (link of the audio of the youtube clip)
     """
+    # Fetch search result from youtube
     fetch = search(inquiry)
-    print("youtube dling")
-    print(fetch[0])
-    info = youtube_dl.YoutubeDL({'format':'bestaudio', "noplaylist": "True"}).extract_info(fetch[0], download=False)
-    print("finished youtube dling")
+    # Extract info from the URL
+    info = youtube_dl.YoutubeDL(self.yt_OPTIONS).extract_info(fetch[0], download=False)
+    # Get the audio link from the extract
     for format in info['formats']:
               if 'url' in format:
                   s = format['url'].lstrip('https://')
                   if s[0] == 'r':
                       audio_link = format['url']
                       break
-    print(audio_link)
+    # Return the fetched search result and the audio link of the result
     return fetch, audio_link
 
   async def append_data(self, ctx: Context, data):
@@ -139,7 +140,8 @@ class music(Cog):
         # Add the song to the database
         db_add_song(song=entry[0], link=entry[1])
         # Fetch song audio url
-        info = youtube_dl.YoutubeDL({'format':'bestaudio', "noplaylist": "True"}).extract_info(entry[1], download=False)
+        info = youtube_dl.YoutubeDL(self.yt_OPTIONS).extract_info(entry[1], download=False)
+        # Get the audio link from the extract
         for format in info['formats']:
                   if 'url' in format:
                       s = format['url'].lstrip('https://')
@@ -164,7 +166,7 @@ class music(Cog):
     """
     Appends the youtube playlist to the music queue
     """
-    info = youtube_dl.YoutubeDL({'format':'bestaudio', "noplaylist": "True"}).extract_info(link, download=False)
+    info = youtube_dl.YoutubeDL(self.yt_OPTIONS).extract_info(link, download=False)
     for entry in info['entries']:
       # Add the song to the database
       db_add_song(song=entry['title'], link=entry['url'])
