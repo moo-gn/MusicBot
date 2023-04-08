@@ -48,7 +48,7 @@ def db_add_song(song: str, link: str, ctx: Context = None):
   try:
     cursor.execute(f"SELECT song FROM music WHERE song='{song}';")
     exists = cursor.fetchall()
-    if len(exists) > 0:
+    if exists:
       cursor.execute(f"UPDATE music SET uses=uses+1 WHERE song='{song}';")
     else:
       cursor.execute(f"INSERT INTO music(song, uses, link) values ('{song}', '1', '{link}');")            
@@ -270,7 +270,7 @@ class music(Cog):
     If the shuffle condition is on, The function will not pop the song and it will keep it in the queue. It will use self.increment to determine the next song to play.
     """
     # If a queue exists do the following
-    if len(self.queue) > 0:
+    if self.queue:
 
       # Increment the position in the queue and Maintain the increment within bounds
       self.increment += 1
@@ -506,26 +506,43 @@ class music(Cog):
     await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
 
   @commands.command(aliases=['B'])
-  async def black(self, ctx: Context, *, args):
+  async def black(self, ctx: Context, *args):
     cursor, db = db_init()
+    print(' '.join(args))
     if args:
-       song = args
-    else:
+       song = ' '.join(args)
+    elif self.currently_playing:
        song = self.currently_playing
-    cursor.execute(f"UPDATE music SET blacklisted=1 WHERE song='{song}';")
-    db.commit()
+    else:
+       await ctx.send(embed=qb.send_msg(f"Nothing is playing and no argument!"))
+       return
+
+  
+    cursor.execute(f"SELECT song FROM music WHERE song='{song}';")
+    exists = cursor.fetchall()
+    if exists:
+      cursor.execute(f"UPDATE music SET blacklisted=1 WHERE song='{song}';")
+      db.commit()
+      await ctx.send(embed=qb.send_msg(f"Blacklisted {song}!"))
+    else:
+      await ctx.send(embed=qb.send_msg(f"{song} doesn't exist in The Database"))
     db.close()
-    await ctx.send(embed=qb.send_msg(f"Blacklisted {song}!"))
+
 
 
   @commands.command(aliases=['UB'])
-  async def unblack(self, ctx: Context, *, args):
-    message = args
+  async def unblack(self, ctx: Context, *args):
+    song = ' '.join(args)
     cursor, db = db_init()
-    cursor.execute(f"UPDATE music SET blacklisted=0 WHERE song='{message}';")
-    db.commit()
+    cursor.execute(f"SELECT song FROM music WHERE song='{song}';")
+    exists = cursor.fetchall()
+    if exists:
+      cursor.execute(f"UPDATE music SET blacklisted=0 WHERE song='{song}';")
+      db.commit()
+      await ctx.send(embed=qb.send_msg(f"Removed {song} from Blacklist"))
+    else:
+      await ctx.send(embed=qb.send_msg(f"{song} doesn't exist in The Database"))
     db.close()
-    await ctx.send(embed=qb.send_msg(f"Removed {message} from Blacklist"))
 
 
   @commands.command(aliases=['BL'])
