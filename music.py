@@ -89,6 +89,7 @@ class music(Cog):
     'lyrics, lyric, ly: sends lyrics of any song (default is current song)',
     'partist: plays songs from the database from specific artist chosen by the user',
     'prandy: plays 5 random song from the database. You can specify a number to play'
+    'Blacklist from prandy using Black or B, and remove by Unblack or UB, and display list with Blacklist or BL'
     ]
 
   @commands.command(aliases=['j'])
@@ -467,7 +468,7 @@ class music(Cog):
 
       if data:
         await self.append_data(ctx,data)
-        await ctx.send(embed=qb.queue_list(self.queue))  
+        await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)  
       else:
         await ctx.send('**[ERROR 404]** Artist not found')
 
@@ -484,15 +485,47 @@ class music(Cog):
     if message:
       # If limit is found
       try:
-        cursor.execute(f"select song,link FROM music WHERE uses > 5 ORDER BY rand() LIMIT {message};")
+        cursor.execute(f"select song,link FROM music WHERE uses > 5 AND blacklisted=0 ORDER BY rand() LIMIT {message};")
       except:
         await ctx.send('**[ERROR 404]** Invalid number')   
     else:
       #Select all the current data in the database and display it         
-      cursor.execute(f"select song,link FROM music WHERE uses > 5 ORDER BY rand() LIMIT 5;")         
+      cursor.execute(f"select song,link FROM music WHERE uses > 5 AND blacklisted=0 ORDER BY rand() LIMIT 5;")         
 
     data = cursor.fetchall()        
     db.close()
     # Add the music
     await self.append_data(ctx,data)  
-    await ctx.send(embed=qb.queue_list(self.queue))
+    await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
+
+  @commands.command(aliases=['B'])
+  async def black(self, ctx: Context, *, args):
+    cursor, db = db_init()
+    if args:
+       song = args
+    else:
+       song = self.currently_playing
+    cursor.execute(f"UPDATE music SET blacklisted=1 WHERE song='{song}';")
+    db.commit()
+    db.close()
+    await ctx.send(embed=qb.send_msg(f"Blacklisted {song}!"))
+
+
+  @commands.command(aliases=['UB'])
+  async def unblack(self, ctx: Context, *, args):
+    message = args
+    cursor, db = db_init()
+    cursor.execute(f"UPDATE music SET blacklisted=0 WHERE song='{message}';")
+    db.commit()
+    db.close()
+    await ctx.send(embed=qb.send_msg(f"Removed {message} from Blacklist"))
+
+
+  @commands.command(aliases=['BL'])
+  async def blacklist(self, ctx: Context):
+    cursor, db = db_init()
+    cursor.execute(f"select song FROM music WHERE blacklisted=1 ORDER BY song;")
+    data = cursor.fetchall()
+    db.close()
+    await ctx.send(embed=qb.queue_list(data, title="BlackList:"), view = Qbuttons(data) if len(data)> 25 else None)
+

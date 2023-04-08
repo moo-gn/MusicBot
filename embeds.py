@@ -3,12 +3,12 @@ from typing import List
 
 color_in = 0x8dffd3
 
-def queue_list(song_list: List[str], page: int = 1):
+def queue_list(song_list: List[str], page: int = 1, title = "Song Queue:"):
   """
   Generates an embed that displays the current music queue
   :params: song_list - List[str]
   """
-  embed = Embed(title = 'Song Queue:', color=color_in)
+  embed = Embed(title = title, color=color_in)
   embed.set_thumbnail(url = 'https://cdn.discordapp.com/attachments/901624454688440430/901664414963499079/musicStops.png')
   embed.set_footer(text = '{0}/{1}'.format(page, -(-len(song_list)//25)) )
   for i in range((page -1)*25,len(song_list)):
