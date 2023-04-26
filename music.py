@@ -141,7 +141,10 @@ class music(Cog):
         # Add the song to the database
         db_add_song(song=entry[0], link=entry[1])
         # Fetch song audio url
-        info = youtube_dl.YoutubeDL(self.yt_OPTIONS).extract_info(entry[1], download=False)
+        try:
+          info = youtube_dl.YoutubeDL(self.yt_OPTIONS).extract_info(entry[1], download=False)
+        except youtube_dl.utils.DownloadError:
+           continue
         # Get the audio link from the extract
         for format in info['formats']:
                   if 'url' in format:
