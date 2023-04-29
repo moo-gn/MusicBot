@@ -146,11 +146,14 @@ class music(Cog):
         # Fetch song audio url
         try:
           info = youtube_dl.YoutubeDL(self.yt_OPTIONS).extract_info(entry[1], download=False)
+        #if video unavailable this error is caught
         except youtube_dl.utils.DownloadError:
           cursor, db = db_init()
+          #delete the song from the database
           cursor.execute(f"DELETE FROM music WHERE song='{entry[0]}';")
           db.commit()
           await ctx.send(embed=qb.send_msg(f"'{entry[0]}' is unavailable and was removed from the DB!"))
+          #query another song and append it to data
           cursor.execute(f"select song,link FROM music WHERE uses > 5 AND blacklisted=0 ORDER BY rand() LIMIT {1};")
           new = cursor.fetchall()
           data.extend(new)
