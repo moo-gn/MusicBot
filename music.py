@@ -74,7 +74,7 @@ class music(Cog):
     self.loop = False
     self.currently_playing = ''
     self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-    self.yt_OPTIONS = {'format':'bestaudio', "noplaylist": "True", 'verbose': True}
+    self.yt_OPTIONS = {'format':'bestaudio', "noplaylist": "True", 'verbose': False}
     self.cmnds = [
     'join, j : joins the voice channel', 
     'leave : leaves the voice channel', 
@@ -137,14 +137,25 @@ class music(Cog):
       """
       Appends the SQL data to the music queue
       """
-      for entry in data:
+      data = list(data)
+      while len(data) > 0:
         # Add the song to the database
+        entry = data[0]
+        data.pop(0)
         db_add_song(song=entry[0], link=entry[1])
         # Fetch song audio url
         try:
           info = youtube_dl.YoutubeDL(self.yt_OPTIONS).extract_info(entry[1], download=False)
         except youtube_dl.utils.DownloadError:
-           continue
+          cursor, db = db_init()
+          cursor.execute(f"DELETE FROM music WHERE song='{entry[0]}';")
+          db.commit()
+          await ctx.send(embed=qb.send_msg(f"'{entry[0]}' is unavailable and was removed from the DB!"))
+          cursor.execute(f"select song,link FROM music WHERE uses > 5 AND blacklisted=0 ORDER BY rand() LIMIT {1};")
+          new = cursor.fetchall()
+          data.extend(new)
+          db.close()
+          continue
         # Get the audio link from the extract
         for format in info['formats']:
                   if 'url' in format:
