@@ -77,7 +77,7 @@ class music(Cog):
 		self.queue = []
 		self.loop = False
 		self.currently_playing = ''
-		self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+		self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn -filter:a loudnorm'}
 		self.yt_OPTIONS = {'format':'bestaudio', "noplaylist": "True", 'verbose': False}
 		self.cmnds = [
 		'join, j : joins the voice channel', 
