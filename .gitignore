@@ -1,6 +1,6 @@
 # Ignore local enviroment
 musicenv
-
+venv
 # Ignore credentials file
 credentials.py
 

@@ -23,6 +23,8 @@ async def on_ready():
 async def on_voice_state_update(member, before, after):
   if before.channel and not after.channel and not member.bot:
     x = member.guild.voice_client
+    if x is None:
+      return
     for y in x.channel.members:
       if not y.bot:
         return

@@ -20,6 +20,7 @@ import credentials
 connection = SSHTunnelForwarder((credentials.ssh_website),
 																ssh_username=credentials.ssh_username, ssh_password=credentials.ssh_password,
 																remote_bind_address=(credentials.remote_bind_address, 3306),
+																set_keepalive=30,
 														 ) 
 connection.start()
 
@@ -29,7 +30,9 @@ def db_init():
 	"""
 	
 	# Ensure SSH connection is active
-	connection.start()
+	if not connection.is_active:
+		print("connection to db is down restarting...")
+		connection.restart()
 
 	# Connect
 	db = connect(
@@ -77,8 +80,9 @@ class music(Cog):
 		self.queue = []
 		self.loop = False
 		self.currently_playing = ''
-		self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn -filter:a loudnorm'}
-		self.yt_OPTIONS = {'format':'bestaudio', "noplaylist": "True", 'verbose': False}
+		self.FFMPEG_OPTIONS = {
+		'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5','options': '-vn'}
+		self.yt_OPTIONS = {'format':'bestaudio', "noplaylist": "True", 'verbose': False,}
 		self.cmnds = [
 		'join, j : joins the voice channel', 
 		'leave : leaves the voice channel', 
@@ -153,10 +157,8 @@ class music(Cog):
 				#if video unavailable this error is caught
 				except youtube_dl.utils.DownloadError:
 					cursor, db = db_init()
-					#delete the song from the database
-					cursor.execute(f"DELETE FROM music WHERE song='{entry[0]}';")
-					db.commit()
-					await ctx.send(embed=qb.send_msg(f"'{entry[0]}' is unavailable and was removed from the DB!"))
+					#send user msg the song from the database
+					await ctx.send(embed=qb.send_msg(f"'{entry[0]}' is unavailable retrying with another song!"))
 					#query another song and append it to data
 					cursor.execute(f"select song,link FROM music WHERE uses > 5 AND blacklisted=0 ORDER BY rand() LIMIT {1};")
 					new = cursor.fetchall()
