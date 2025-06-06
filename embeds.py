@@ -8,12 +8,19 @@ def queue_list(song_list: List[str], page: int = 1, title = "Song Queue:"):
   Generates an embed that displays the current music queue
   :params: song_list - List[str]
   """
-  embed = Embed(title = title, color=color_in)
-  embed.set_thumbnail(url = 'https://cdn.discordapp.com/attachments/901624454688440430/901664414963499079/musicStops.png')
-  embed.set_footer(text = '{0}/{1}'.format(page, -(-len(song_list)//25)) )
-  for i in range((page -1)*25,len(song_list)):
-    embed.add_field(name=f'{i + 1}. {song_list[i][0]}', value = '\u200b', inline=False)
-  return embed 
+  embed = Embed(title=title, color=color_in)
+  embed.set_thumbnail(url='https://cdn.discordapp.com/attachments/901624454688440430/901664414963499079/musicStops.png')
+    
+  total_pages = -(-len(song_list) // 25)  # ceil division
+  embed.set_footer(text=f'{page}/{total_pages}')
+    
+  start = (page - 1) * 25
+  end = min(start + 25, len(song_list))  # limit to 25 entries
+    
+  for i in range(start, end):
+      embed.add_field(name=f'{i + 1}. {song_list[i][0]}', value='\u200b', inline=False)
+
+  return embed
 
 def help_list(command_list: List[str]):
   """
