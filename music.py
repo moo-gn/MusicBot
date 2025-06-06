@@ -2,18 +2,14 @@
 
 import asyncio
 import random
-import discord
 import yt_dlp as youtube_dl
 from discord.ext import commands
-from discord.ext.commands import Context, Cog
+from discord.ext.commands import Context
 from dataBase import db_add_song, random_songs, artist_songs, blacklist, get_blacklist
 import embeds as qb
 from qbuttons import Qbuttons
 from ytdlpSource import YTDLPSource
 from search_yt import search
-import sys
-sys.path.append("..")
-import credentials
 
 # Suppress noise about console usage from errors
 # youtube_dl.utils.bug_reports_message = lambda: ''

@@ -1,5 +1,6 @@
 from asyncclient import AsyncClient 
 import embeds as  qb
+
 import sys
 sys.path.append("..")
 import credentials
@@ -14,7 +15,7 @@ client = AsyncClient(
 							db_user=credentials.db_user,
 							db_pass=credentials.db_passwd,
 							db_name=credentials.db,
-							set_keepalive=30,
+							keepalive_interval=30,
 						)
 
 
