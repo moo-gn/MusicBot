@@ -44,15 +44,3 @@ class YTDLPSource(discord.PCMVolumeTransformer):
 
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
-    
-    @staticmethod
-    async def get_info(query, *, loop=None, is_search=False):
-        loop = loop or asyncio.get_event_loop()
-
-        target = f"ytsearch:{query}" if is_search else query
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(target, download=False))
-
-        if 'entries' in data:
-            data = data['entries'][0]
-
-        return [data['title'], data['webpage_url']]

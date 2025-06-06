@@ -10,6 +10,7 @@ from dataBase import db_add_song, random_songs, artist_songs, blacklist, get_bla
 import embeds as qb
 from qbuttons import Qbuttons
 from ytdlpSource import YTDLPSource
+from search_yt import search
 import sys
 sys.path.append("..")
 import credentials
@@ -24,6 +25,7 @@ class Music(commands.Cog):
         self.queue = []
         self.now_playing = []
         self.loop = False
+        self.auto_play = False
 
     @commands.command(aliases=['j'])
     async def join(self, ctx : Context):
@@ -38,23 +40,26 @@ class Music(commands.Cog):
         await ctx.author.voice.channel.connect()
 
     @commands.command(aliases=["p"])
-    async def play(self, ctx, *, query):
+    async def play(self, ctx:Context, *, query):
         """Search yt and streams it"""
 
         async with ctx.typing():
-            info = await YTDLPSource.get_info(query, loop=self.bot.loop, is_search=True)
+            info = await search(query)
             loop_tag = " 🔁" if self.loop else ""
-
+            
             if not ctx.voice_client.is_playing():
                 player = await YTDLPSource.from_url(info[1], loop=self.bot.loop)
                 await db_add_song(song=info[0], link=info[1])
                 ctx.voice_client.play(player, after=lambda x: asyncio.run_coroutine_threadsafe(self.play_after(ctx),self.bot.loop))
-                await ctx.send(embed=qb.send_msg(f'Now playing: {info[0]} {loop_tag}'))
+                await ctx.send(embed=qb.send_msg(f'Now playing: **{info[0]}** {loop_tag}'))
                 self.now_playing = [info[0],info[1]]
 
-            elif ctx.voice_client.is_playing() or self.loop:
+                if self.loop:
+                    self.queue.append([info[0],info[1]])
+
+            else:
                 self.queue.append([info[0],info[1]])
-                await ctx.send(embed=qb.send_msg(f'Added {info[0]} to queue {loop_tag}'))
+                await ctx.send(embed=qb.send_msg(f'Added **{info[0]}** to queue {loop_tag}'))
             
 
     async def play_after(self, ctx:Context):
@@ -66,25 +71,33 @@ class Music(commands.Cog):
                 try:
                     player = await YTDLPSource.from_url(song[1], loop=self.bot.loop)
                 except youtube_dl.utils.DownloadError:
-                    await ctx.send(embed=qb.send_msg(f"'{song[0]}' is unavailable retrying with another song!"))
+                    await ctx.send(embed=qb.send_msg(f"'**{song[0]}**' is unavailable retrying with another song!"))
                     song = await random_songs(ctx, 1)
                     self.queue.extend(song)
                     if not ctx.voice_client.is_playing():
                         await self.play_after(ctx)
+                
                 await db_add_song(song=song[0], link=song[1])
                 ctx.voice_client.play(player, after=lambda x: asyncio.run_coroutine_threadsafe(self.play_after(ctx),self.bot.loop))
                 loop_tag = " 🔁" if self.loop else ""
-                await ctx.send(embed=qb.send_msg(f'Now playing: {song[0]} {loop_tag}'))
+                autoplay_tag = " 🤖" if self.auto_play else ""
+                await ctx.send(embed=qb.send_msg(f'Now playing: **{song[0]}** {autoplay_tag}{loop_tag}'))
                 self.now_playing = song
+
+            elif self.auto_play:
+                song = await random_songs(ctx, 1)
+                self.queue.extend(song)
+                await self.play_after(ctx)
+
             
     @commands.command(aliases=["pn"])
     async def playnext(self, ctx, *, query):
         """Plays a song next (adds it to the top of the queue)"""
         async with ctx.typing():
-            # Force ytsearch since it's a user query
-            info = await YTDLPSource.get_info(query, loop=self.bot.loop, is_search=True)
+            if not ctx.voice_client.is_playing():
+                await ctx.send(embed=qb.send_msg(f'Nothing is playing'))
             
-            # Insert at the top of the queue
+            info = await search(query)
             self.queue.insert(0, info)
 
             await ctx.send(embed=qb.send_msg(f'**{info[0]}** will play next'))
@@ -94,7 +107,7 @@ class Music(commands.Cog):
         """
         Prints the song that is currently playing.
         """
-        await ctx.send(embed=qb.send_msg(f'{self.currently_playing[0]} is currently playing'))
+        await ctx.send(embed=qb.send_msg(f'**{self.currently_playing[0]}** is currently playing'))
 
     @commands.command(aliases=['s'])
     async def skip(self, ctx: Context):
@@ -116,6 +129,9 @@ class Music(commands.Cog):
         await ctx.send(embed=qb.send_msg("Queue loop turned {status}".format(status="on 🔁" if self.loop else "off ▶️")))
         if self.loop and ctx.voice_client.is_playing():
             self.queue.append(self.now_playing)
+        if not self.loop:
+            if self.now_playing == self.queue[0]:
+                self.queue.pop(0)
 
     @commands.command(aliases=['queue','q'])
     async def list(self, ctx: Context):
@@ -161,7 +177,7 @@ class Music(commands.Cog):
         try:
             song = self.queue.pop(int(message)-1)
             self.queue.insert(0, song)
-            await ctx.send(embed=qb.send_msg(f"Skipped to {int(message)}. {song[0]}!"))
+            await ctx.send(embed=qb.send_msg(f"Skipped to {int(message)}. **{song[0]}**!"))
             ctx.voice_client.stop()
         except Exception as e:
             print(f"⚠️ Error: {e}")
@@ -174,6 +190,7 @@ class Music(commands.Cog):
 
         random.shuffle(self.queue)
         await ctx.send(embed=qb.send_msg("Queue shuffled!"))
+        await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
 
     @commands.command(aliases=['stop', 'hold'])
     async def pause(self, ctx: Context):
@@ -219,8 +236,22 @@ class Music(commands.Cog):
 
             await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
 
+    @commands.command(aliases=['ap'])
+    async def autoplay(self, ctx: Context, message: str = None):
+        """
+        Play random songs when queue is empty forever   
+        """
+        async with ctx.typing():
+            self.auto_play = not self.auto_play
+            await ctx.send(embed=qb.send_msg("Autoplay turned {status}".format(status="on 🤖" if self.auto_play else "off ▶️")))
+            if not ctx.voice_client.is_playing():
+                await self.play_after(ctx)
+
     @commands.command(aliases=['B'])
     async def blacklist(self, ctx: Context, *args):
+        """
+        add argument or current song to blacklist   
+        """
         async with ctx.typing():
             if args:
                 song = ' '.join(args)
@@ -233,6 +264,9 @@ class Music(commands.Cog):
 
     @commands.command(aliases=['BL', 'gb'])
     async def getblacklist(self, ctx: Context):
+        """
+        display the full blacklist   
+        """
         async with ctx.typing():
             data = await get_blacklist(ctx)
             await ctx.send(embed=qb.queue_list(data, title="BlackList:"), view = Qbuttons(data) if len(data)> 25 else None)
@@ -259,6 +293,7 @@ class Music(commands.Cog):
     @prandy.before_invoke
     @partist.before_invoke
     @blacklist.before_invoke
+    @autoplay.before_invoke
     async def ensure_voice(self, ctx):
         if ctx.voice_client is None:
             if ctx.author.voice:

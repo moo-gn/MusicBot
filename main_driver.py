@@ -7,7 +7,6 @@ cogs = [Music]
 bot = commands.Bot(command_prefix='.',
                       intents = discord.Intents.all(),
                       case_insensitive = True,
-                      help_command=None,
                       description='Gamer Nation music discord bot',
 )
 

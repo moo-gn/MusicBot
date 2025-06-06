@@ -1,4 +1,4 @@
-import requests
+import aiohttp
 from html.parser import HTMLParser
 from urllib.parse import quote_plus
 
@@ -31,7 +31,7 @@ class LinkParser(HTMLParser):
       self.link = data[data.find('watch?v='):data.find('watch?v=') + 19]
 
 
-def search(query: str):
+async def search(query: str):
   """
   Takes a query and returns a title and link of the first YouTube search response
   :params: query - str
@@ -44,20 +44,23 @@ def search(query: str):
 
   #Fetch the HTML of the search page
   url = f"https://www.youtube.com/results?search_query={query}"
-  response = requests.get(url)
+  async with aiohttp.ClientSession() as session:
+    async with session.get(url) as resp:
+      html = await resp.text()
 
-  #Parse it for the first suggestion link
-  parser = LinkParser()
-  parser.feed(response.text)
-  link = f"https://www.youtube.com/{parser.link}"
+    #Parse it for the first suggestion link
+    parser = LinkParser()
+    parser.feed(html)
+    link = f"https://www.youtube.com/{parser.link}"
 
-  #Prase the suggestion link for the title
-  response = requests.get(link)
-  parser = TitleParser()
-  parser.feed(response.text)
-  title = parser.title
+    #Parse the suggestion link for the title
+    async with session.get(link) as resp:
+      video_html = await resp.text()
+    parser = TitleParser()
+    parser.feed(video_html)
+    title = parser.title
 
-  return[link, title]
+  return[title, link]
 
 if __name__ == "__main__":
     # pass
