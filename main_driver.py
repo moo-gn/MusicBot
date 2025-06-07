@@ -29,6 +29,11 @@ async def on_ready():
     print('------')
 
 @bot.event
+async def on_command_error(ctx, error):
+    print(f"[error] {type(error).__name__}: {error}")    
+    raise error  # optionally re-raise to get full traceback
+
+@bot.event
 async def on_voice_state_update(member, before, after):
   if before.channel and not after.channel and not member.bot:
     x = member.guild.voice_client
