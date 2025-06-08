@@ -43,6 +43,11 @@ async def on_voice_state_update(member, before, after):
       if not y.bot:
         return
     await x.disconnect()
-
+  if member.bot and before.channel and not after.channel:
+          # Bot was disconnected from VC
+          music_cog = bot.get_cog("Music")
+          if music_cog:
+              music_cog.is_playing = False
+              music_cog.queue = []
 
 asyncio.run(main())
