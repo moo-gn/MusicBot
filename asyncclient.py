@@ -1,13 +1,14 @@
 import asyncssh
 import aiomysql
 import socket
+import asyncio  # import asyncio for Lock
 
 
 class AsyncClient:
     def __init__(self, ssh_host, ssh_username, ssh_password,
                  remote_bind_address, db_user, db_pass, db_name,
                  local_port=3307, keepalive_interval=None):
-        
+
         self.ssh_host = ssh_host
         self.ssh_username = ssh_username
         self.ssh_password = ssh_password
@@ -20,6 +21,7 @@ class AsyncClient:
 
         self.tunnel = None
         self.pool = None
+        self._pool_lock = asyncio.Lock()  # Lock to protect pool creation
 
     async def connect_ssh_tunnel(self):
         """Establish a new SSH tunnel."""
@@ -41,9 +43,15 @@ class AsyncClient:
             print(f"[SSH ERROR] Failed to establish SSH tunnel: {e}")
             raise
 
+    def tunnel_is_active(self):
+        try:
+            return self.tunnel is not None and self.tunnel._conn is not None and not self.tunnel._conn.is_closing()
+        except AttributeError:
+            return False
+
     async def ensure_ssh_tunnel(self):
         """Ensure SSH tunnel is active and reconnect if needed."""
-        if self.tunnel is None or self.tunnel._conn is None or self.tunnel._conn.is_closing():
+        if not self.tunnel_is_active():
             await self.close_ssh_tunnel()
             await self.connect_ssh_tunnel()
 
@@ -68,9 +76,10 @@ class AsyncClient:
 
     async def ensure_db_pool(self):
         """Ensure the DB pool is active and reconnect if needed."""
-        if self.pool is None or self.pool._closed:
-            await self.close_db_pool()
-            await self.connect_db_pool()
+        async with self._pool_lock:
+            if self.pool is None or self.pool._closed:
+                await self.close_db_pool()
+                await self.connect_db_pool()
 
     async def get_cursor(self):
         """Get a MySQL cursor, reconnecting if needed."""

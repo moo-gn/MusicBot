@@ -28,12 +28,11 @@ async def db_add_song(song: str, link: str,):
 	cursor, con = await client.get_cursor()
 
 	try:
-		await cursor.execute("SELECT song FROM music WHERE song=%s;", (song,))
-		exists = await cursor.fetchall()
-		if exists:
-			await cursor.execute("UPDATE music SET uses=uses+1 WHERE song=%s;", (song,))
-		else:
-			await cursor.execute("INSERT INTO music(song, uses, link) values (%s, %s, %s);", (song, 1, link))
+		await cursor.execute("""
+			INSERT INTO music (song, uses, link)
+			VALUES (%s, 1, %s)
+			ON DUPLICATE KEY UPDATE uses = uses + 1;
+			""", (song, link))
 	except Exception as e:
 		print(e)
 	finally:

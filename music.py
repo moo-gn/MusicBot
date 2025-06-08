@@ -22,6 +22,7 @@ class Music(commands.Cog):
         self.now_playing = []
         self.loop = False
         self.auto_play = False
+        self.is_playing = False
 
     @commands.command(aliases=['j'])
     async def join(self, ctx : Context):
@@ -38,17 +39,17 @@ class Music(commands.Cog):
     @commands.command(aliases=["p"])
     async def play(self, ctx:Context, *, query):
         """Search yt and streams it"""
-
         async with ctx.typing():
             info = await search(query)
             loop_tag = " 🔁" if self.loop else ""
             
-            if not ctx.voice_client.is_playing():
+            if not self.is_playing:
+                self.is_playing = True
                 player = await YTDLPSource.from_url(info[1], loop=self.bot.loop)
-                await db_add_song(song=info[0], link=info[1])
                 ctx.voice_client.play(player, after=lambda x: asyncio.run_coroutine_threadsafe(self.play_after(ctx),self.bot.loop))
                 await ctx.send(embed=qb.send_msg(f'Now playing: **{info[0]}** {loop_tag}'))
                 self.now_playing = [info[0],info[1]]
+                await db_add_song(song=info[0], link=info[1])
 
                 if self.loop:
                     self.queue.append([info[0],info[1]])
@@ -61,6 +62,7 @@ class Music(commands.Cog):
     async def play_after(self, ctx:Context):
         async with ctx.typing():
             if self.queue:
+                self.is_playing = True
                 song = self.queue.pop(0)
                 if self.loop:
                     self.queue.append(song)
@@ -70,27 +72,29 @@ class Music(commands.Cog):
                     await ctx.send(embed=qb.send_msg(f"'**{song[0]}**' is unavailable retrying with another song!"))
                     song = await random_songs(ctx, 1)
                     self.queue.extend(song)
-                    if not ctx.voice_client.is_playing():
+                    if not self.is_playing:
                         await self.play_after(ctx)
                 
-                await db_add_song(song=song[0], link=song[1])
                 ctx.voice_client.play(player, after=lambda x: asyncio.run_coroutine_threadsafe(self.play_after(ctx),self.bot.loop))
                 loop_tag = " 🔁" if self.loop else ""
                 autoplay_tag = " 🤖" if self.auto_play else ""
                 await ctx.send(embed=qb.send_msg(f'Now playing: **{song[0]}** {autoplay_tag}{loop_tag}'))
                 self.now_playing = song
+                await db_add_song(song=song[0], link=song[1])
 
             elif self.auto_play:
                 song = await random_songs(ctx, 1)
                 self.queue.extend(song)
                 await self.play_after(ctx)
+            else:
+                self.is_playing = False
 
             
     @commands.command(aliases=["pn"])
     async def playnext(self, ctx, *, query):
         """Plays a song next (adds it to the top of the queue)"""
         async with ctx.typing():
-            if not ctx.voice_client.is_playing():
+            if not self.is_playing:
                 await ctx.send(embed=qb.send_msg(f'Nothing is playing'))
             
             info = await search(query)
@@ -213,7 +217,7 @@ class Music(commands.Cog):
             data = await random_songs(ctx, amount=int(message) if message else 5)
             # Add the music
             self.queue.extend(data)
-            if not ctx.voice_client.is_playing():
+            if not self.is_playing:
                 await self.play_after(ctx)
             
             await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
@@ -227,7 +231,7 @@ class Music(commands.Cog):
             data = await artist_songs(ctx, message)
             # Add the music
             self.queue.extend(data)
-            if not ctx.voice_client.is_playing():
+            if not self.is_playing:
                 await self.play_after(ctx)
 
             await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
@@ -240,7 +244,7 @@ class Music(commands.Cog):
         async with ctx.typing():
             self.auto_play = not self.auto_play
             await ctx.send(embed=qb.send_msg("Autoplay turned {status}".format(status="on 🤖" if self.auto_play else "off ▶️")))
-            if not ctx.voice_client.is_playing():
+            if not self.is_playing:
                 await self.play_after(ctx)
 
     @commands.command(aliases=['B'])
