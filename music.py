@@ -76,8 +76,7 @@ class Music(commands.Cog):
                     await ctx.send(embed=qb.send_msg(f"'**{song[0]}**' is unavailable retrying with another song!"))
                     song = await random_songs(ctx, 1)
                     self.queue.extend(song)
-                    if not self.is_playing:
-                        await self.play_after(ctx)
+                    await self.play_after(ctx)
                 
                 ctx.voice_client.play(player, after=lambda x: asyncio.run_coroutine_threadsafe(self.play_after(ctx),self.bot.loop))
                 loop_tag = " 🔁" if self.loop else ""
