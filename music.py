@@ -7,17 +7,21 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from dataBase import db_add_song, random_songs, artist_songs, blacklist, get_blacklist
 import embeds as qb
-from qbuttons import Qbuttons
+from embed_paginator import Paginator
 from ytdlpSource import YTDLPSource
 from search_yt import search
-
+from lyricsgenius import Genius
+from genius_search import smart_clean_lyrics, chunk_lyrics
+import time
 # Suppress noise about console usage from errors
 # youtube_dl.utils.bug_reports_message = lambda: ''
-
+#excluded_terms=['spotify', 'top hits', 'Release Calendar', 'Best Songs', 'Genius Picks']
 
 class Music(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot, GENIUS_TOKEN):
         self.bot = bot
+        self.genius: Genius = Genius(access_token=GENIUS_TOKEN, timeout=5, retries=2, remove_section_headers=True, skip_non_songs=True, 
+                                     excluded_terms=['spotify', 'top hits', 'Release Calendar', 'Best Songs', 'Genius Picks'])
         self.queue = []
         self.now_playing = []
         self.loop = False
@@ -141,7 +145,7 @@ class Music(commands.Cog):
         async with ctx.typing():
             loop_tag = " 🔁" if self.loop else ""
             await ctx.send(embed=qb.c_playing(f'{self.now_playing[0]} {loop_tag}'))
-            await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue) > 25 else None)
+            await ctx.send(embed=qb.queue_list(self.queue), view = Paginator(self.queue, qb.queue_list) if len(self.queue)> 25 else None)
 
     @commands.command(aliases=['clr'])
     async def clear(self, ctx: Context):
@@ -190,7 +194,7 @@ class Music(commands.Cog):
 
         random.shuffle(self.queue)
         await ctx.send(embed=qb.send_msg("Queue shuffled!"))
-        await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
+        await ctx.send(embed=qb.queue_list(self.queue), view = Paginator(self.queue, qb.queue_list) if len(self.queue)> 25 else None)
 
     @commands.command(aliases=['stop', 'hold'])
     async def pause(self, ctx: Context):
@@ -220,7 +224,7 @@ class Music(commands.Cog):
             if not self.is_playing:
                 await self.play_after(ctx)
             
-            await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
+            await ctx.send(embed=qb.queue_list(self.queue), view = Paginator(self.queue, qb.queue_list) if len(self.queue)> 25 else None)
 
     @commands.command()
     async def partist(self, ctx: Context, *, message: str):
@@ -234,7 +238,7 @@ class Music(commands.Cog):
             if not self.is_playing:
                 await self.play_after(ctx)
 
-            await ctx.send(embed=qb.queue_list(self.queue), view = Qbuttons(self.queue) if len(self.queue)> 25 else None)
+            await ctx.send(embed=qb.queue_list(self.queue), view = Paginator(self.queue, qb.queue_list) if len(self.queue)> 25 else None)
 
     @commands.command(aliases=['ap'])
     async def autoplay(self, ctx: Context, message: str = None):
@@ -269,8 +273,36 @@ class Music(commands.Cog):
         """
         async with ctx.typing():
             data = await get_blacklist(ctx)
-            await ctx.send(embed=qb.queue_list(data, title="BlackList:"), view = Qbuttons(data) if len(data)> 25 else None)
+            await ctx.send(embed=qb.queue_list(data, title="BlackList:"), view = Paginator(data, qb.queue_list) if len(data)> 25 else None)
+
     
+    @commands.command(aliases=['ly'])
+    async def lyrics(self, ctx:Context, *, query: str = None):
+
+        async with ctx.typing():
+            if not query:
+                if self.is_playing:
+                    query = self.now_playing[0]
+                else:
+                    await ctx.send(embed=qb.send_msg('No song is currently playing'))
+                    return
+                
+            def fetch_lyrics():
+                song = self.genius.search_song(query.split('(', 1)[0].split('[', 1)[0])
+                return (song.lyrics, song.full_title) if song else (None ,None)
+            
+            lyrics_text, title = await asyncio.to_thread(fetch_lyrics)
+
+            if not lyrics_text:
+                await ctx.send(embed=qb.send_msg("Lyrics not found."))
+                return
+
+            # Split and send the lyrics in chunks (Discord limit = 2000 characters)
+            cleaned_lyrics = smart_clean_lyrics(lyrics_text)
+            chunks = chunk_lyrics(cleaned_lyrics)
+
+            await ctx.send(embed=qb.lyric_embed(chunks, title=title), 
+                           view = Paginator(chunks, qb.lyric_embed, per_page=1, title=title) if len(chunks)> 1 else None)
 
     @commands.command()
     async def leave(self, ctx):

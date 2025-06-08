@@ -20,7 +20,7 @@ GENIUS_TOKEN = credentials.Genius
 
 async def main():
     async with bot:
-      await bot.add_cog(Music(bot))
+      await bot.add_cog(Music(bot, GENIUS_TOKEN))
       await bot.start(TOKEN)
 
 @bot.event

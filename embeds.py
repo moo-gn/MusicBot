@@ -22,6 +22,19 @@ def queue_list(song_list: List[str], page: int = 1, title = "Song Queue:"):
 
   return embed
 
+def lyric_embed(chunks: List[str],page: int = 1, title: str = "Lyrics"):
+  """
+  Generates an embed that displays the lyrics of passed song
+  :params: lyric chunks 4000 char max - List[str]
+  """
+  embed = Embed(title=title, description=chunks[page - 1], color=color_in)
+  embed.set_thumbnail(url='https://cdn.discordapp.com/attachments/901624454688440430/901664414963499079/musicStops.png')
+    
+  total_pages = len(chunks)
+  embed.set_footer(text=f'{page}/{total_pages}')
+
+  return embed
+
 def help_list(command_list: List[str]):
   """
   Generates an embed that displays the current supported commands
