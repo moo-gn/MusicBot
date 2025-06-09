@@ -12,7 +12,6 @@ from ytdlpSource import YTDLPSource
 from search_yt import search
 from lyricsgenius import Genius
 from genius_search import smart_clean_lyrics, chunk_lyrics
-import time
 # Suppress noise about console usage from errors
 # youtube_dl.utils.bug_reports_message = lambda: ''
 #excluded_terms=['spotify', 'top hits', 'Release Calendar', 'Best Songs', 'Genius Picks']

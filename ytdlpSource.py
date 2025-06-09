@@ -1,9 +1,8 @@
 import yt_dlp as youtube_dl
 import discord
 import asyncio
-import time
 ytdl_format_options = {
-    'format': 'bestaudio/best',
+    "format": "251/bestaudio[ext=webm]/bestaudio/best",
     'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': True,
@@ -13,6 +12,9 @@ ytdl_format_options = {
     'quiet': True,
     'no_warnings': True,
     'extract_flat': True,
+    'skip_download': True,
+    'cachedir': False,
+    'nocheckcertificate': True,
     'default_search': 'auto',
     'source_address': '0.0.0.0',  # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
@@ -36,8 +38,7 @@ class YTDLPSource(discord.PCMVolumeTransformer):
     @classmethod
     async def from_url(cls, url, *, loop=None, stream=True):
         loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-        
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False))
         if 'entries' in data:
             # take first item from a playlist
             data = data['entries'][0]
